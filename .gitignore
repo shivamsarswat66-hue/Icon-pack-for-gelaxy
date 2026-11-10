@@ -2,5 +2,8 @@ node_modules/
 data/store.json
 .DS_Store
 *.log
+npm-debug.log*
 .env
 .env.*
+dist/
+.vercel
