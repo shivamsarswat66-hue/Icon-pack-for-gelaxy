@@ -67,10 +67,10 @@ function main() {
 
   let html = read("public/index.html");
   const inject =
-    '<script src="/engine.bundle.js"></script>\n    <script src="/local-api.js"></script>\n    <script src="/app.js"></script>';
-  if (!html.includes('<script src="/app.js"></script>'))
+    '<script src="engine.bundle.js"></script>\n    <script src="local-api.js"></script>\n    <script src="app.js"></script>';
+  if (!html.includes('<script src="app.js"></script>'))
     throw new Error("public/index.html: app.js script tag not found");
-  html = html.replace('<script src="/app.js"></script>', inject);
+  html = html.replace('<script src="app.js"></script>', inject);
   write("index.html", html);
 
   // 404 -> SPA shell (harmless: the app is a single screen)
