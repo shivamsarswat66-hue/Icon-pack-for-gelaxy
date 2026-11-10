@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07070c" />
+<title>CineMatch — films picked for your taste</title>
+<meta name="description" content="Tell CineMatch what you love. Get a shortlist of films you will actually want to watch." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff4d6d'/%3E%3Cpath d='M24 20l22 12-22 12z' fill='%23fff'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L20 6.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2.5l1.9 6.1 6.1 1.9-6.1 1.9L12 18.5l-1.9-6.1L4 10.5l6.1-1.9z" fill="currentColor"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M4.5 20c1.4-3.6 4.2-5.2 7.5-5.2S18.1 16.4 19.5 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H6M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.6V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.6 6.1.6-4.6 4 1.4 6-5.4-3.2-5.4 3.2 1.4-6-4.6-4 6.1-.6z" fill="currentColor"/></symbol>
+</svg>
+
+<!-- ============================ ONBOARDING ============================ -->
+<div id="onboarding" class="onb">
+  <div class="onb-glow" aria-hidden="true"></div>
+  <header class="onb-head">
+    <a class="brand" href="/" aria-label="CineMatch home">
+      <span class="brand-mark"><svg><use href="#i-play"/></svg></span>
+      <span class="brand-name">Cine<span>Match</span></span>
+    </a>
+    <div class="steps" id="steps" aria-hidden="true"></div>
+  </header>
+
+  <main class="onb-main" id="onbMain">
+    <!-- STEP 1 : signup -->
+    <section class="onb-step" data-step="signup">
+      <div class="signup-grid">
+        <div class="signup-copy">
+          <p class="eyebrow"><svg class="ic"><use href="#i-spark"/></svg> A taste engine, not a search box</p>
+          <h1>Stop scrolling.<br /><span class="grad-text">Start watching.</span></h1>
+          <p class="lede">Tell us a few films you love. We learn how you think, ask a handful of quick
+            questions, then hand you a shortlist of 60 films you will actually want to press play on.</p>
+          <ul class="ticks">
+            <li><svg class="ic"><use href="#i-check"/></svg> Spell-checked, no-fuss movie entry</li>
+            <li><svg class="ic"><use href="#i-check"/></svg> Recommendations that learn from every tap</li>
+            <li><svg class="ic"><use href="#i-check"/></svg> 214 hand-picked films across world cinema</li>
+          </ul>
+        </div>
+        <form class="card signup-card" id="signupForm" novalidate>
+          <h2>Let's begin</h2>
+          <p class="muted small">Takes about 90 seconds. No password needed.</p>
+          <label class="field">
+            <span>Your name</span>
+            <input id="nameInput" type="text" placeholder="e.g. Aarav" autocomplete="given-name" maxlength="40" required />
+          </label>
+          <label class="field">
+            <span>Email <em class="muted">(optional)</em></span>
+            <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" maxlength="120" />
+          </label>
+          <p class="form-error" id="signupError" role="alert" hidden></p>
+          <button class="btn btn-primary btn-block" type="submit" id="signupBtn">
+            Start matching <svg class="ic"><use href="#i-arrow"/></svg>
+          </button>
+          <p class="micro muted">No password, no tracking, no ads. Your taste profile is saved locally on our server.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- STEP 2 : genres -->
+    <section class="onb-step" data-step="genres" hidden>
+      <div class="step-head">
+        <p class="eyebrow">Step 1 of 4</p>
+        <h1>What do you gravitate to?</h1>
+        <p class="lede">Pick everything that sounds like a good night. Pick nothing and we will find out the hard way.</p>
+      </div>
+      <div class="chip-section">
+        <h2 class="section-title">Genres <span class="counter" id="genreCount">0 selected</span></h2>
+        <div class="chips" id="genreChips"></div>
+      </div>
+      <div class="chip-section">
+        <h2 class="section-title">Languages &amp; industries <span class="muted small">optional</span></h2>
+        <div class="chips" id="industryChips"></div>
+      </div>
+      <p class="micro muted hint-card">
+        <svg class="ic"><use href="#i-spark"/></svg>
+        These are only a starting point — the questions in the next step do the real tuning.
+      </p>
+      <div class="sticky-actions">
+        <button class="btn btn-ghost" id="genresSkip" type="button">Skip</button>
+        <button class="btn btn-primary" id="genresNext" type="button">Continue <svg class="ic"><use href="#i-arrow"/></svg></button>
+      </div>
+    </section>
+
+    <!-- STEP 3 : movies -->
+    <section class="onb-step" data-step="movies" hidden>
+      <div class="step-head">
+        <p class="eyebrow">Step 2 of 4</p>
+        <h1>Name the films you love.</h1>
+        <p class="lede">Don't worry about spelling — <strong>Intersteller</strong> becomes <strong>Interstellar</strong>
+          before it reaches the list. Add three to ten of your most memorable.</p>
+      </div>
+      <div class="entry-wrap">
+        <div class="entry-box">
+          <svg class="ic entry-ic"><use href="#i-plus"/></svg>
+          <input id="movieInput" type="text" placeholder="Type a film name… e.g. Intersteller"
+                 autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="suggestions" />
+          <button class="btn btn-ghost entry-add" id="addMovieBtn" type="button">Add</button>
+          <div class="suggestions" id="suggestions" role="listbox" hidden></div>
+        </div>
+        <p class="micro muted entry-hint">Tip: paste a comma-separated list to add several at once.</p>
+        <div class="chosen" id="chosenList"></div>
+        <div class="quickpicks" id="quickPicks"></div>
+      </div>
+      <div class="sticky-actions">
+        <button class="btn btn-ghost" id="moviesSkip" type="button">Skip this step</button>
+        <button class="btn btn-primary" id="moviesNext" type="button" disabled>
+          Continue <svg class="ic"><use href="#i-arrow"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- STEP 4 : confirm -->
+    <section class="onb-step" data-step="confirm" hidden>
+      <div class="step-head">
+        <p class="eyebrow">Step 3 of 4</p>
+        <h1>Did we get these right?</h1>
+        <p class="lede">This is the list we will build your taste profile from. Remove anything that isn't really you.</p>
+      </div>
+      <div class="confirm-list" id="confirmList"></div>
+      <div class="confirm-missing" id="confirmMissing" hidden></div>
+      <div class="sticky-actions">
+        <button class="btn btn-ghost" id="confirmBack" type="button"><svg class="ic"><use href="#i-back"/></svg> Add more</button>
+        <button class="btn btn-primary" id="confirmYes" type="button">
+          Yes, these are the ones <svg class="ic"><use href="#i-check"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- STEP 5 : questions -->
+    <section class="onb-step" data-step="questions" hidden>
+      <div class="step-head">
+        <p class="eyebrow">Step 4 of 4</p>
+        <h1>Would you watch this?</h1>
+        <p class="lede">Fewer, smarter questions. Every yes and no sharpens the shortlist.</p>
+      </div>
+      <div class="q-progress"><span id="qProgressBar"></span></div>
+      <div class="q-wrap" id="qWrap"></div>
+      <div class="q-footer">
+        <button class="text-btn" id="qSkipAll" type="button">Skip remaining questions</button>
+        <span class="muted small" id="qCount">1 of 8</span>
+      </div>
+    </section>
+
+    <!-- STEP 6 : build -->
+    <section class="onb-step build-step" data-step="build" hidden>
+      <div class="build-inner">
+        <div class="orbit"><span></span><span></span><span></span></div>
+        <h2 id="buildTitle">Reading your taste…</h2>
+        <p class="muted" id="buildLine">Weighting genres against the films you love</p>
+        <div class="build-bars"><i></i><i></i><i></i></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============================ APP ============================ -->
+<div id="app" class="app" hidden>
+  <header class="app-head">
+    <a class="brand" href="/" aria-label="CineMatch home">
+      <span class="brand-mark"><svg><use href="#i-play"/></svg></span>
+      <span class="brand-name">Cine<span>Match</span></span>
+    </a>
+    <nav class="top-nav" id="topNav">
+      <button class="nav-item is-active" data-tab="for-you">For you</button>
+      <button class="nav-item" data-tab="watchlist">Watchlist <span class="badge" id="badgeWatchlist">0</span></button>
+      <button class="nav-item" data-tab="watched">Watched <span class="badge" id="badgeWatched">0</span></button>
+    </nav>
+    <button class="avatar-btn" id="tasteBtn" aria-label="Open my taste profile">
+      <span id="avatarLetter">A</span>
+    </button>
+  </header>
+
+  <main class="app-main">
+    <!-- For you -->
+    <section class="tab-panel" data-panel="for-you">
+      <div class="hello">
+        <div>
+          <h1 id="helloTitle">Your shortlist</h1>
+          <p class="muted" id="helloSub">Loading your picks…</p>
+        </div>
+        <button class="btn btn-soft" id="refreshBtn" type="button">
+          <svg class="ic"><use href="#i-spark"/></svg> Refresh picks
+        </button>
+      </div>
+
+      <div class="taste-strip" id="tasteStrip"></div>
+
+      <div class="toolbar">
+        <div class="filter-chips" id="filterChips"></div>
+        <label class="select-wrap">
+          <span class="sr-only">Sort</span>
+          <select id="sortSelect">
+            <option value="match">Best match</option>
+            <option value="rating">Highest rated</option>
+            <option value="year">Newest first</option>
+            <option value="runtime">Shortest first</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid" id="grid" aria-live="polite"></div>
+      <div class="empty" id="emptyState" hidden></div>
+      <div class="load-more-wrap">
+        <button class="btn btn-soft" id="loadMoreBtn" type="button" hidden>Show more films</button>
+      </div>
+    </section>
+
+    <!-- Watchlist -->
+    <section class="tab-panel" data-panel="watchlist" hidden>
+      <div class="hello">
+        <div>
+          <h1>Watchlist</h1>
+          <p class="muted">Saved for later. Use the bookmark button on any card to manage it.</p>
+        </div>
+      </div>
+      <div class="grid" id="watchlistGrid"></div>
+      <div class="empty" id="watchlistEmpty" hidden>
+        <svg class="ic big"><use href="#i-bookmark"/></svg>
+        <h3>Nothing saved yet</h3>
+        <p class="muted">Tap the bookmark on any recommendation and it lands here.</p>
+      </div>
+    </section>
+
+    <!-- Watched -->
+    <section class="tab-panel" data-panel="watched" hidden>
+      <div class="hello">
+        <div>
+          <h1>Watched</h1>
+          <p class="muted">Every film you mark is a signal — we keep learning from it.</p>
+        </div>
+      </div>
+      <div class="grid" id="watchedGrid"></div>
+      <div class="empty" id="watchedEmpty" hidden>
+        <svg class="ic big"><use href="#i-eye"/></svg>
+        <h3>No films marked yet</h3>
+        <p class="muted">Mark something as watched and the next shortlist gets sharper.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab is-active" data-tab="for-you">
+      <svg class="ic"><use href="#i-spark"/></svg><span>For you</span>
+    </button>
+    <button class="tab" data-tab="watchlist">
+      <svg class="ic"><use href="#i-bookmark"/></svg><span>Watchlist</span>
+      <i class="dot" id="dotWatchlist" hidden></i>
+    </button>
+    <button class="tab" data-tab="watched">
+      <svg class="ic"><use href="#i-eye"/></svg><span>Watched</span>
+    </button>
+    <button class="tab" id="tasteTab" type="button">
+      <svg class="ic"><use href="#i-user"/></svg><span>Taste</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ============================ TASTE DRAWER ============================ -->
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside class="drawer" id="tasteDrawer" aria-labelledby="drawerTitle" aria-hidden="true">
+  <header class="drawer-head">
+    <div>
+      <p class="eyebrow">Your profile</p>
+      <h2 id="drawerTitle">Taste map</h2>
+    </div>
+    <button class="icon-btn" id="drawerClose" aria-label="Close">
+      <svg class="ic"><use href="#i-x"/></svg>
+    </button>
+  </header>
+  <div class="drawer-body" id="drawerBody"></div>
+  <footer class="drawer-foot">
+    <button class="btn btn-primary btn-block" id="retuneBtn" type="button">
+      <svg class="ic"><use href="#i-spark"/></svg> Answer more questions
+    </button>
+    <button class="btn btn-ghost btn-block" id="resetBtn" type="button">Start over</button>
+  </footer>
+</aside>
+
+<!-- ============================ MOVIE MODAL ============================ -->
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="modal"></div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

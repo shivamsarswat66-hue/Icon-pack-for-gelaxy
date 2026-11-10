@@ -1,0 +1,20 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# New → Blueprint → pick this repo → Apply. No build step, no dependencies.
+services:
+  - type: web
+    name: cinematch
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: "echo 'No build step — zero dependencies'"
+    startCommand: "node server.js"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Free plan has an ephemeral filesystem, so profiles reset on redeploy.
+      # Attach a persistent disk (paid plans) and set DATA_DIR=/var/data to keep them.
+      # - key: DATA_DIR
+      #   value: /var/data
