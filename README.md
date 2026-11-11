@@ -65,7 +65,10 @@ isn't in it no longer fails and no longer guesses:
 node tools/import-wikidata.js --limit 750 --india 300 --intros 260
 ```
 
-Popularity-ordered global films plus a guaranteed Indian-cinema slice; genres come from the
+**1,107 films** ship with the app — 241 hand-curated (including a deliberate block of recent
+Indian popular cinema: *Rockstar*, *Animal*, *Vikram*, *Sairat*, *96*, *Drishyam*, *Jai Bhim*,
+*Kantara*, *Pushpa*, *Andhadhun*…) plus 866 imported from Wikidata. Popularity-ordered global
+films plus a guaranteed Indian-cinema slice; genres come from the
 film's own description and Wikidata claims, synopses are real Wikipedia prose where available and
 a factual composed line otherwise, and anything without usable genre signal is skipped rather
 than guessed. Curated entries always win over imports.
