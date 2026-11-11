@@ -27,16 +27,24 @@ const it = (name, fn) => {
 };
 
 console.log("\nengine: suggestion honesty");
-it("'rockstar' offers nothing rather than Rocky (1976)", () => {
-  const titles = engine.search("rockstar", 6).map((r) => r.movie.title);
+it("'rockstar' finds Rockstar (2011) and never Rocky (1976)", () => {
+  const hits = engine.search("rockstar", 6);
+  const titles = hits.map((r) => r.movie.title);
+  assert.ok(titles.includes("Rockstar"), "expected Rockstar, got " + titles.join(","));
   assert.ok(!titles.includes("Rocky"), "Rocky leaked back into suggestions");
-  assert.strictEqual(titles.length, 0, "expected no suggestions, got " + titles.join(","));
+  assert.strictEqual(hits[0].movie.year, 2011);
 });
 
-it("'animal' offers nothing rather than Arrival", () => {
+it("'animal' finds Animal (2023) and never Arrival", () => {
   const titles = engine.search("animal", 6).map((r) => r.movie.title);
-  assert.ok(!titles.includes("Arrival"));
-  assert.strictEqual(titles.length, 0);
+  assert.ok(titles.includes("Animal"), "expected Animal, got " + titles.join(","));
+  assert.ok(!titles.includes("Arrival"), "Arrival leaked back into suggestions");
+});
+
+it("a film we do not have still offers nothing (no confident wrong match)", () => {
+  for (const q of ["xvzqw", "kaanekkaane", "zzz qqq"]) {
+    assert.strictEqual(engine.search(q, 6).length, 0, "invented a match for " + q);
+  }
 });
 
 it("real typos still resolve", () => {
@@ -67,14 +75,16 @@ console.log("\nengine: resolution bands");
 it("resolveOne bands are exact / corrected / weak / none", () => {
   assert.strictEqual(engine.resolveOne("Inception").confidence, "exact");
   assert.strictEqual(engine.resolveOne("incepton").confidence, "corrected");
-  assert.strictEqual(engine.resolveOne("rockstar").confidence, "none");
-  assert.strictEqual(engine.resolveOne("rockstar").movie, null);
+  assert.strictEqual(engine.resolveOne("rockstar").confidence, "exact");
+  assert.strictEqual(engine.resolveOne("rockstar").movie.year, 2011);
+  assert.strictEqual(engine.resolveOne("kaanekkaane").confidence, "none");
+  assert.strictEqual(engine.resolveOne("kaanekkaane").movie, null);
 });
 
 console.log("\nengine: unrated (web-added) films");
 const webFilm = {
   id: "w-q3438002",
-  title: "Rockstar",
+  title: "Kaanekkaane",
   year: 2011,
   industry: "BW",
   industryName: "Bollywood",
@@ -83,7 +93,7 @@ const webFilm = {
   director: "Imtiaz Ali",
   genres: ["Drama", "Romance", "Musical"],
   keywords: ["music", "india"],
-  synopsis: "A musician chases fame and loses the love that made him.",
+  synopsis: "A father confronts the man who killed his son in a hit-and-run.",
   source: "wikipedia",
 };
 
@@ -102,9 +112,9 @@ it("a null rating never produces NaN scores", () => {
 });
 
 it("registered films become searchable and rankable candidates", () => {
-  const hit = engine.search("rockstar", 3)[0];
+  const hit = engine.search("kaanekkaane", 3)[0];
   assert.ok(hit, "registered film not searchable");
-  assert.strictEqual(hit.movie.title, "Rockstar");
+  assert.strictEqual(hit.movie.title, "Kaanekkaane");
   const profile = engine.newProfile();
   engine.setGenres(profile, ["Drama"]);
   assert.ok(engine.candidates(profile).some((m) => m.id === "w-q3438002"));

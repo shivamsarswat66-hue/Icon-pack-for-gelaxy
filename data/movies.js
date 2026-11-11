@@ -246,6 +246,45 @@ const RAW = [
   ["Yeh Jawaani Hai Deewani", 2013, "BW", 7.2, 160, "Ayan Mukerji", "Romance|Drama|Comedy", "india|friendship|travel|feel-good|bittersweet|music", "A wedding trip turns four friends into adults whether they planned it or not."],
   ["Tamasha", 2015, "BW", 7.2, 149, "Imtiaz Ali", "Romance|Drama", "india|identity|self-discovery|bittersweet|surreal|music", "A burnt-out salesman remembers the storyteller he was on the other side of the world."],
 
+  // ---------- contemporary Indian popular cinema (added after user feedback) ----------
+  ["Rockstar", 2011, "BW", 7.7, 159, "Imtiaz Ali", "Drama|Romance|Music", "music|obsession|rise-and-fall|love|tragic|india", "A dreamer becomes a superstar by turning his heartbreak into songs he can no longer feel."],
+  ["Animal", 2023, "BW", 6.1, 201, "Sandeep Reddy Vanga", "Action|Crime|Drama", "father-son|violence|obsession|brutal|family|india", "A son reshapes himself into a weapon to protect a father who never had time for him."],
+  ["Andhadhun", 2018, "BW", 8.2, 139, "Sriram Raghavan", "Crime|Thriller|Comedy", "twist|blind|dark-comedy|murder|piano|india", "A blind pianist accidentally witnesses a murder and discovers how badly he can lie."],
+  ["Gully Boy", 2019, "BW", 7.9, 154, "Zoya Akhtar", "Drama|Music", "rap|underdog|mumbai|dreams|class|india", "A boy from a Mumbai slum finds his voice in rap and refuses to shrink back into it."],
+  ["Barfi!", 2012, "BW", 8.1, 151, "Anurag Basu", "Drama|Romance|Comedy", "charming|feel-good|disability|love|loss|india", "A deaf-mute charmer and an autistic girl build a world that makes more sense than ours."],
+  ["Chhichhore", 2019, "BW", 8.3, 143, "Nitesh Tiwari", "Comedy|Drama", "college|friendship|nostalgia|feel-good|hope|india", "A father tells his son about losing at everything that mattered at college."],
+  ["Jawan", 2023, "BW", 7.0, 169, "Atlee", "Action|Thriller", "vigilante|revenge|political|spectacle|father-son|india", "A masked vigilante hijacks a metro and exposes a rot that reaches into parliament."],
+  ["Pathaan", 2023, "BW", 5.9, 146, "Siddharth Anand", "Action|Thriller", "spy|spectacle|stunts|patriotism|india", "An exiled spy is pulled back in to stop a rogue outfit from burning the border down."],
+  ["Stree", 2018, "BW", 7.5, 128, "Amar Kaushik", "Horror|Comedy", "ghost|small-town|humor|curse|india", "A town blames a vengeful spirit for its missing men, and one tailor decides to flirt with her."],
+  ["Badhaai Ho", 2018, "BW", 8.0, 124, "Amit Sharma", "Comedy|Drama|Family", "family|feel-good|marriage|society|humor|india", "A grown man's world tilts sideways when his parents announce a surprise baby."],
+  ["Masaan", 2015, "BW", 8.1, 109, "Neeraj Ghaywan", "Drama", "grief|class|varanasi|hope|social|india", "Two strangers in Varanasi carry the dead weight of their families' shame and keep walking."],
+  ["Newton", 2017, "BW", 7.7, 106, "Amit Masurkar", "Drama|Comedy", "election|idealism|village|satire|india", "An honest clerk tries to run a free election in a forest village that has stopped believing in them."],
+  ["The Lunchbox", 2013, "BW", 7.8, 104, "Ritesh Batra", "Drama|Romance", "letters|loneliness|mumbai|food|hope|india", "A misdelivered lunchbox starts a correspondence between two people who needed someone to talk to."],
+  ["Vikram", 2022, "IN", 8.3, 175, "Lokesh Kanagaraj", "Action|Thriller|Crime", "undercover|revenge|cartel|twist|investigation|india", "A black-ops agent hunts a drug syndicate while a mysterious old man dismantles it from inside."],
+  ["Kaithi", 2019, "IN", 8.4, 145, "Lokesh Kanagaraj", "Action|Thriller|Crime", "one-night|chase|police|brutal|tense|india", "A released convict just wants to see his daughter, and one night of violence has other plans."],
+  ["Asuran", 2019, "IN", 8.4, 141, "Vetrimaaran", "Action|Drama|Crime", "caste|land|revenge|brutal|village|india", "A farmer hides his violent past while his son's death forces the whole caste war into the open."],
+  ["Soorarai Pottru", 2020, "IN", 8.4, 153, "Sudha Kongara", "Drama|Biography", "aviation|underdog|inspirational|true-story|india|dreams", "A former airman fights a monopoly to start an airline for people who have never flown."],
+  ["Jai Bhim", 2021, "IN", 8.7, 164, "T. J. Gnanavel", "Drama|Crime|Biography", "courtroom|justice|social|true-story|brutal|india", "A lawyer takes on a police force that made a man disappear for asking about his wife."],
+  ["Pariyerum Perumal", 2018, "IN", 8.6, 154, "Mari Selvaraj", "Drama", "caste|college|friendship|social|india|coming-of-age", "A first-generation law student learns exactly how much his caste costs him every single day."],
+  ["Ratsasan", 2018, "IN", 8.3, 170, "Ram Kumar", "Thriller|Crime|Mystery", "serial-killer|investigation|dark|twist|police|india", "A cop chasing a child killer realises the profile fits someone standing very close to him."],
+  ["96", 2018, "IN", 8.4, 158, "C. Prem Kumar", "Romance|Drama", "school|nostalgia|love|reunion|bittersweet|india", "A school reunion puts two people back in the same room as the teenagers they never stopped being."],
+  ["Anbe Sivam", 2003, "IN", 8.6, 160, "Sundar C.", "Drama|Comedy", "road-trip|idealism|friendship|faith|india|feel-good", "A stranded optimist and a cynical ad man argue their way across India about God and kindness."],
+  ["Master", 2021, "IN", 7.0, 179, "Lokesh Kanagaraj", "Action|Thriller|Crime", "villain|juvenile|redemption|stylized|india", "An alcoholic professor is sent to a juvenile home run by a gangster with a very long memory."],
+  ["Pushpa: The Rise", 2021, "IN", 7.6, 179, "Sukumar", "Action|Crime|Drama", "smuggling|rise-and-fall|underdog|stylized|india", "A coolie claws his way to the top of a red-sandalwood racket and refuses to bow again."],
+  ["Arjun Reddy", 2017, "IN", 8.0, 182, "Sandeep Reddy Vanga", "Drama|Romance", "self-destruction|addiction|love|obsession|raw|india", "A brilliant surgeon shreds his own life after a break-up he refuses to accept."],
+  ["Jersey", 2019, "IN", 8.5, 157, "Gowtam Tinnanuri", "Drama|Sports", "cricket|father-son|underdog|inspirational|india|tearjerker", "A 36-year-old ex-cricketer tries out for the state team so his son will believe in something."],
+  ["Eega", 2012, "IN", 7.7, 134, "S. S. Rajamouli", "Fantasy|Action|Comedy", "reincarnation|revenge|creature|whimsical|spectacle|india", "A murdered man comes back as a housefly and wages an absurdly effective war on his killer."],
+  ["Ala Vaikunthapurramuloo", 2020, "IN", 7.2, 165, "Trivikram Srinivas", "Action|Comedy|Drama", "family|identity|feel-good|music|india", "A clerk's son discovers he was swapped at birth with a rich man's heir, and handles it his way."],
+  ["Drishyam", 2013, "IN", 8.3, 160, "Jeethu Joseph", "Crime|Thriller|Drama", "cover-up|family|police|smart|twist|india", "A small-town cable operator builds an airtight alibi to protect his family from a powerful father."],
+  ["Premam", 2015, "IN", 8.2, 156, "Alphonse Puthren", "Romance|Comedy|Drama", "coming-of-age|love|nostalgia|feel-good|india|college", "Three stages of a man's life, told through the three women he loved at the wrong times."],
+  ["Bangalore Days", 2014, "IN", 8.2, 172, "Anjali Menon", "Comedy|Drama|Romance", "cousins|city|friendship|feel-good|family|india", "Three cousins move to Bangalore to chase very different dreams and keep tripping over each other."],
+  ["Maheshinte Prathikaaram", 2016, "IN", 8.1, 123, "Dileesh Pothan", "Comedy|Drama", "small-town|revenge|feel-good|photography|india", "A small-town photographer vows to take revenge on the man who humiliated him, then keeps postponing it."],
+  ["Lucia", 2013, "IN", 7.9, 135, "Pawan Kumar", "Sci-Fi|Drama|Mystery", "dreams|mind-bending|dream-machine|independent|india", "A cinema usher buys a pill that lets him live his dreams — and someone else starts living his life."],
+  ["Sairat", 2016, "IN", 8.3, 174, "Nagraj Manjule", "Romance|Drama", "caste|love|tragic|village|social|india", "Two teenagers from opposite ends of a village caste line run away and find the world outside is worse."],
+  ["Tumbbad", 2018, "IN", 8.2, 104, "Rahi Anil Barve", "Horror|Fantasy|Drama", "greed|curse|folklore|atmospheric|period|india", "A family guards a buried treasure guarded by something that only wants to be remembered."],
+  ["Super Deluxe", 2019, "IN", 8.3, 176, "Thiagarajan Kumararaja", "Drama|Thriller|Comedy", "nonlinear|ensemble|dark-comedy|faith|india|surreal", "Four stories collide over one chaotic day in Chennai, all of them about people refusing to look away."],
+  ["Vada Chennai", 2018, "IN", 8.2, 164, "Vetrimaaran", "Crime|Drama|Action", "gangster|housing|nonlinear|brutal|india", "A carrom player becomes a pawn in a housing board war and slowly learns to play it himself."],
+
 ];
 
 const INDUSTRIES = {
@@ -269,7 +308,9 @@ const slugify = (s) =>
 
 const CURATED = RAW.filter((row) => row[0] && row[1])
   .map((row) => {
-    const [title, year, industry, rating, runtime, director, genres, keywords, synopsis] = row;
+    const [rawTitle, year, industry, rating, runtime, director, genres, keywords, synopsis] = row;
+    // "'96" reads badly on a card — trim leading punctuation the same way lookup does
+    const title = String(rawTitle).replace(/^[^A-Za-z0-9]+/, "");
     return {
       id: slugify(title) || `movie-${year}`,
       title,
@@ -296,6 +337,12 @@ try {
   EXTRA = [];
 }
 
+const normTitlePre = (t) =>
+  String(t || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
 const normTitle = (t) =>
   String(t || "")
     .toLowerCase()
@@ -304,13 +351,23 @@ const normTitle = (t) =>
 
 // Curated films always win, and a title that is already covered is never imported
 // twice — two "Dune: Part Two" cards in one grid is worse than one missing remake.
-const curatedTitles = new Set(CURATED.map((m) => normTitle(m.title)));
+// The hand-written list itself can contain the same film twice (a title re-added
+// later); keep the first spelling and never emit duplicates.
+const seenCurated = new Set();
+const CURATED_UNIQUE = CURATED.filter((m) => {
+  const key = normTitlePre(m.title);
+  if (!key || seenCurated.has(key)) return false;
+  seenCurated.add(key);
+  return true;
+});
+
+const curatedTitles = new Set(CURATED_UNIQUE.map((m) => normTitlePre(m.title)));
 const seenExtra = new Set();
 
-const movies = CURATED.concat(
+const movies = CURATED_UNIQUE.concat(
   (Array.isArray(EXTRA) ? EXTRA : []).filter((m) => {
     if (!m || !m.id || !m.title || !m.year || !m.genres || !m.genres.length) return false;
-    const key = normTitle(m.title);
+    const key = normTitlePre(m.title);
     if (!key || curatedTitles.has(key) || seenExtra.has(key)) return false;
     seenExtra.add(key);
     return true;

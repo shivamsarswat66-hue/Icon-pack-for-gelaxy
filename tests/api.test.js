@@ -100,10 +100,20 @@ async function main() {
   });
 
   console.log("\napi: honesty");
-  await it("junk queries return no suggestions", async () => {
-    for (const q of ["rockstar", "animal"]) {
+  await it("titles we do not have return no suggestions", async () => {
+    for (const q of ["xvzqw", "kaanekkaane"]) {
       const { json } = await call(`/api/search?q=${q}`);
-      assert.deepStrictEqual(json.results, [], `${q} returned ${json.results.map((r) => r.title)}`);
+      assert.deepStrictEqual(json.results, [], `${q} invented ${json.results.map((r) => r.title)}`);
+    }
+  });
+
+  await it("popular titles the user asked for now resolve", async () => {
+    for (const [q, title, year] of [["rockstar", "Rockstar", 2011], ["animal", "Animal", 2023], ["vikram", "Vikram", 2022], ["sairat", "Sairat", 2016]]) {
+      const { json } = await call(`/api/search?q=${q}`);
+      const top = json.results[0];
+      assert.ok(top, `${q} found nothing`);
+      assert.strictEqual(top.title, title, `${q} → ${top.title}`);
+      assert.strictEqual(top.year, year);
     }
   });
 
