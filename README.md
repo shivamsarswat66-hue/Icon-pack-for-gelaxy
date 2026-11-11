@@ -30,6 +30,42 @@ Works as a single responsive app on laptops, tablets and phones (tested from 320
 
 ---
 
+## Films it doesn't have yet (online lookup)
+
+The bundled catalogue is big but it can never be *everything*. So typing a title that
+isn't in it no longer fails and no longer guesses:
+
+1. **Honest matching.** Suggestions are only shown when the engine actually believes them.
+   Measured on this catalogue: genuine matches — including heavy typos like `shawshenk`,
+   `incepton`, `3 idots` — score ≥ 0.90, while junk (`animal` → *Arrival*, `rockstar` →
+   *Rocky*) scores ≤ 0.55. The floor is **0.68**, so junk is never offered.
+2. **No match is a real answer.** You get *"“rockstar” isn't in our library — search the web for it"*.
+3. **Keyless lookup.** The search runs against **Wikipedia + Wikidata** (both allow CORS, so it
+   works from the static build too — no API key, no server, no cost), and is normalised into the
+   same schema as the curated catalogue: title, year, industry, runtime, director, `genres[]`
+   mapped onto our 19 genres, `keywords[]` mapped onto our existing vocabulary, and a synopsis.
+4. **You confirm, always.** Candidates come back as *"Is this the one?"* with year, genres and a
+   one-line plot; nothing is added silently.
+5. **It becomes a first-class film.** Confirmed films are registered into the live catalogue, so
+   they work everywhere: search, the yes/no prober, ranking and feedback. On the server edition
+   they're cached in `data/discovered.json` for every visitor; on the static edition they're
+   cached in `localStorage`.
+6. **No invented data.** Web-added films carry **no rating** — open data doesn't provide one, so
+   the UI omits it and the ranker treats it as neutral. Cards show a small `web` marker instead.
+
+### Expanding the bundled catalogue
+
+`tools/import-wikidata.js` grows `data/movies.extra.js` from Wikidata + Wikipedia:
+
+```bash
+node tools/import-wikidata.js --limit 750 --india 300 --intros 260
+```
+
+Popularity-ordered global films plus a guaranteed Indian-cinema slice; genres come from the
+film's own description and Wikidata claims, synopses are real Wikipedia prose where available and
+a factual composed line otherwise, and anything without usable genre signal is skipped rather
+than guessed. Curated entries always win over imports.
+
 ## How the recommendation engine works
 
 Everything runs locally in `src/engine.js` — no API keys, no network calls, no cost per recommendation.
@@ -78,7 +114,11 @@ movie-mate/
 ├── vercel.json          # Vercel config: node build.js → dist/
 ├── src/engine.js        # fuzzy title matching, taste model, questions, ranker
 ├── src/localapi.js      # browser shim: answers /api/* from the engine, saves to localStorage
-├── data/movies.js       # 214-film knowledge base (genres, keywords, premise, rating, director)
+├── src/lookup.js        # Wikipedia/Wikidata lookup + normalisation into our schema
+├── tools/import-wikidata.js  # build-time catalogue importer → data/movies.extra.js
+├── data/movies.js       # curated knowledge base (genres, keywords, premise, rating, director)
+├── data/movies.extra.js # ~870 imported films from Wikidata/Wikipedia (generated)
+├── tests/               # engine + API regression tests (node, no dependencies)
 ├── data/store.json      # runtime user store (git-ignored)
 ├── public/
 │   ├── index.html       # app shell + onboarding screens
@@ -151,7 +191,7 @@ git remote add origin https://github.com/<your-user>/<your-repo>.git
 git push -u origin main
 ```
 
-`data/store.json` and `node_modules/` are git-ignored, so no personal sessions are published.
+`data/store.json`, `data/discovered.json` and `node_modules/` are git-ignored, so no personal sessions are published.
 
 ### Two editions, one engine
 
@@ -200,3 +240,22 @@ database, no disk, nothing to lose on redeploy.
 - 60 cards on first paint, refilled after every feedback tap, 120 available on request, no duplicates.
 - Zero console errors across the whole flow; API responses checked by script.
 - No layout overflow at 320 px and up; long titles clamp instead of breaking cards.
+
+---
+
+## Data & attribution
+
+Curated catalogue © this project. Film metadata and plot summaries imported or fetched at runtime
+come from **Wikipedia** (CC BY-SA 4.0) and **Wikidata** (CC0) — each such film stores its
+`sourceUrl`, and web-added cards are marked `web` in the UI. No ratings are invented: imported
+films simply have none.
+
+## Tests
+
+```bash
+npm test                    # both suites
+node tests/engine.test.js   # matching honesty, resolution bands, unrated films, normalisation
+node tests/api.test.js      # full HTTP contract incl. online-discovered films
+```
+
+Both are dependency-free (`node:assert`) and run in a couple of seconds.

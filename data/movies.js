@@ -267,7 +267,7 @@ const slugify = (s) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const movies = RAW.filter((row) => row[0] && row[1])
+const CURATED = RAW.filter((row) => row[0] && row[1])
   .map((row) => {
     const [title, year, industry, rating, runtime, director, genres, keywords, synopsis] = row;
     return {
@@ -284,6 +284,38 @@ const movies = RAW.filter((row) => row[0] && row[1])
       synopsis,
     };
   });
+
+/* ---- imported catalogue (tools/import-wikidata.js) ---------------------------
+ * Hand-curated films always win: an import only contributes entries whose id is
+ * not already taken. The file is optional so the app still runs without it.
+ */
+let EXTRA = [];
+try {
+  EXTRA = require("./movies.extra");
+} catch (_) {
+  EXTRA = [];
+}
+
+const normTitle = (t) =>
+  String(t || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+// Curated films always win, and a title that is already covered is never imported
+// twice — two "Dune: Part Two" cards in one grid is worse than one missing remake.
+const curatedTitles = new Set(CURATED.map((m) => normTitle(m.title)));
+const seenExtra = new Set();
+
+const movies = CURATED.concat(
+  (Array.isArray(EXTRA) ? EXTRA : []).filter((m) => {
+    if (!m || !m.id || !m.title || !m.year || !m.genres || !m.genres.length) return false;
+    const key = normTitle(m.title);
+    if (!key || curatedTitles.has(key) || seenExtra.has(key)) return false;
+    seenExtra.add(key);
+    return true;
+  })
+);
 
 const byId = new Map(movies.map((m) => [m.id, m]));
 

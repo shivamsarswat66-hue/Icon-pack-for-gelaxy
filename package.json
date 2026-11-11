@@ -2,13 +2,14 @@
   "name": "cinematch",
   "version": "1.0.0",
   "private": true,
-  "description": "CineMatch \u2014 a taste-first movie recommendation site. Onboard with genres and beloved films, answer a few smart yes/no questions, get a ranked shortlist that keeps learning.",
+  "description": "CineMatch — a taste-first movie recommendation site. Onboard with genres and beloved films, answer a few smart yes/no questions, get a ranked shortlist that keeps learning.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "node build.js",
-    "test": "node ../tests/engine.test.js && node ../tests/api.test.js"
+    "test": "node tests/engine.test.js && node tests/api.test.js",
+    "catalog": "node tools/import-wikidata.js --limit 750 --india 300 --intros 260 && node tools/refine-extra.js && node tools/fix-industry.js"
   },
   "engines": {
     "node": ">=18"

@@ -12,10 +12,30 @@
 
   const E = window.CineEngine;
   const D = window.CineData;
+  const L = window.CineLookup;
   const { byId, movies, ALL_GENRES, ALL_INDUSTRIES, INDUSTRIES } = D;
 
   const STORE_KEY = "cinematch.store.v2";
   const TOKEN_KEY = "cinematch.token";
+  const DISCOVERED_KEY = "cinematch.discovered.v1";
+
+  // films found online live alongside the bundled catalogue, exactly like the server edition
+  if (L) L.init({ movies, byId, genres: ALL_GENRES, industries: INDUSTRIES });
+
+  function loadDiscovered() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(DISCOVERED_KEY) || "[]");
+      for (const m of raw) if (L) L.register(m);
+    } catch (_) {}
+  }
+  function saveDiscovered(movie) {
+    try {
+      const raw = JSON.parse(localStorage.getItem(DISCOVERED_KEY) || "[]");
+      if (!raw.some((m) => m.id === movie.id)) raw.push(movie);
+      localStorage.setItem(DISCOVERED_KEY, JSON.stringify(raw.slice(-200)));
+    } catch (_) {}
+  }
+  loadDiscovered();
 
   /* ---------------- storage (with in-memory fallback) ---------------- */
   let memory = null;
@@ -121,6 +141,13 @@
       return jsonResponse(200, { query: q, results });
     }
 
+    if (pathname === "/api/lookup") {
+      const q = search.get("q") || "";
+      if (!L) return jsonResponse(503, { error: "Lookup unavailable.", candidates: [] });
+      // handle() may return a promise; the fetch shim awaits it
+      return L.lookup(q, { limit: 5 }).then((candidates) => jsonResponse(200, { query: q, candidates }));
+    }
+
     if (pathname === "/api/resolve") {
       const results = E.resolveMany(body.text || body.titles || "");
       return jsonResponse(200, {
@@ -173,6 +200,11 @@
     }
 
     if (pathname === "/api/likes") {
+      if (Array.isArray(body.movies) && L) {
+        for (const raw of body.movies.slice(0, 30)) {
+          if (L.register(raw)) saveDiscovered(L.sanitize(raw) || raw);
+        }
+      }
       const ids = (body.movieIds || []).filter((id) => byId.has(id));
       if (Array.isArray(body.titles)) p.seedTitles = body.titles.slice(0, 80);
       E.addLiked(p, ids);
@@ -271,7 +303,12 @@
           payload = init.body ? safeParse(init.body) : {};
         } catch (_) {}
         try {
-          resolve(handle(rawPath, search, method, payload, token));
+          Promise.resolve(handle(rawPath, search, method, payload, token))
+            .then(resolve)
+            .catch((err) => {
+              console.error("[local-api]", err);
+              resolve(jsonResponse(500, { error: "Something went wrong on our side." }));
+            });
         } catch (err) {
           console.error("[local-api]", err);
           resolve(jsonResponse(500, { error: "Something went wrong on our side." }));

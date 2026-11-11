@@ -118,6 +118,11 @@
   const esc = (s) =>
     String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+  // Web-added films have no rating. Never print "null" — omit it instead.
+  const hasRating = (m) =>
+    !!m && m.rating !== null && m.rating !== undefined && m.rating !== "" && Number.isFinite(Number(m.rating));
+  const ratingLabel = (m) => (hasRating(m) ? `★ ${Number(m.rating).toFixed(1)}` : "");
+
   // One or two sentences of synopsis, trimmed so it fits a card neatly.
   function brief(text, max = 118) {
     const t = String(text || "").replace(/\s+/g, " ").trim();
@@ -316,7 +321,13 @@
 
   function renderSuggestions(q) {
     if (!sugItems.length) {
-      sugg.innerHTML = `<div class="sug-none">No match for “${esc(q)}”. Try another title, or check the spelling.</div>`;
+      sugg.innerHTML = `<div class="sug-none">
+          <span>“${esc(q)}” isn't in our library.</span>
+          <button class="btn btn-ghost btn-sm sug-web" type="button" data-web="${esc(q)}">
+            <svg class="ic"><use href="#i-globe"/></svg> Search the web for it
+          </button>
+          <span class="sug-hint">We'll look it up on Wikipedia and add it after you confirm.</span>
+        </div>`;
       sugg.hidden = false;
       return;
     }
@@ -326,13 +337,61 @@
         return `<button class="sug" type="button" role="option" data-sug="${i}" aria-selected="${i === sugActive}">
           ${miniPoster(m, "sug-thumb")}
           <span class="sug-body">
-            <span class="sug-title">${esc(m.title)}${corrected ? `<em>spelling fixed</em>` : ""}</span>
-            <span class="sug-meta">${m.year} · ${esc(m.genres.slice(0, 2).join(" / "))} · ${m.industryName}</span>
+            <span class="sug-title">${esc(m.title)}${corrected ? `<em>spelling fixed</em>` : ""}${m.source === "wikipedia" ? `<em class="web-tag">from the web</em>` : ""}</span>
+            <span class="sug-meta">${m.year || "—"} · ${esc((m.genres || []).slice(0, 2).join(" / "))} · ${m.industryName}${m.confidence ? ` · ${Math.round(m.confidence * 100)}% sure` : ""}</span>
           </span>
+          ${m.source === "wikipedia" && m.synopsis ? `<span class="sug-blurb">${esc(brief(m.synopsis, 96))}</span>` : ""}
         </button>`;
       })
       .join("");
     sugg.hidden = false;
+  }
+
+  /* ---------- online lookup (films outside the bundled catalogue) ---------- */
+  let webBusy = false;
+
+  async function webLookup(title) {
+    const q = String(title || "").trim();
+    if (!q || webBusy) return;
+    webBusy = true;
+    sugg.hidden = false;
+    sugg.innerHTML = `<div class="sug-none sug-loading">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Searching the web for “${esc(q)}”…</span>
+      </div>`;
+    try {
+      const { candidates } = await api(`/lookup?q=${encodeURIComponent(q)}`);
+      if (!candidates || !candidates.length) {
+        sugg.innerHTML = `<div class="sug-none">
+            <span>Couldn't find “${esc(q)}” online — or the web is busy right now.</span>
+            <span class="sug-hint">You can still add it without a lookup; it just won't have tags for personalising.</span>
+            <button class="btn btn-ghost btn-sm" type="button" data-manual="${esc(q)}">Add “${esc(q)}” anyway</button>
+          </div>`;
+        return;
+      }
+      sugItems = candidates;
+      sugActive = 0;
+      sugg.innerHTML =
+        `<div class="sug-head">Is this the one? <span>· from Wikipedia</span></div>` +
+        candidates
+          .map(
+            (m, i) => `<button class="sug sug-webitem" type="button" role="option" data-sug="${i}" aria-selected="${i === 0}">
+              ${miniPoster(m, "sug-thumb")}
+              <span class="sug-body">
+                <span class="sug-title">${esc(m.title)} <em>${m.year || ""}</em></span>
+                <span class="sug-meta">${esc((m.genres || []).join(" / "))} · ${esc(m.industryName)}${m.runtime ? ` · ${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : ""}</span>
+                <span class="sug-blurb">${esc(brief(m.synopsis, 110))}</span>
+              </span>
+            </button>`
+          )
+          .join("");
+      sugg.hidden = false;
+    } catch (err) {
+      toast("Web lookup failed — you can still add the title manually", "warn");
+      hideSuggestions();
+    } finally {
+      webBusy = false;
+    }
   }
 
   function hideSuggestions() {
@@ -367,6 +426,20 @@
   });
 
   sugg.addEventListener("click", (e) => {
+    const webBtn = e.target.closest("[data-web]");
+    if (webBtn) {
+      webLookup(webBtn.dataset.web);
+      return;
+    }
+    const manual = e.target.closest("[data-manual]");
+    if (manual) {
+      onboarding.unresolved.push(manual.dataset.manual);
+      input.value = "";
+      hideSuggestions();
+      renderChosen();
+      toast(`Noted “${manual.dataset.manual}” — we'll keep it as a signal`, "warn");
+      return;
+    }
     const btn = e.target.closest("[data-sug]");
     if (!btn) return;
     const m = sugItems[Number(btn.dataset.sug)];
@@ -447,17 +520,14 @@
         return;
       }
       const { results: near } = await api(`/search?q=${encodeURIComponent(text)}`);
-      if (near && near.length && near[0].score >= 0.58) {
+      if (near && near.length && near[0].score >= 0.68) {
         sugItems = near;
         sugActive = 0;
         renderSuggestions(text);
         toast(`Not sure about “${text}” — pick the closest match below`, "warn");
       } else {
-        onboarding.unresolved.push(text);
-        input.value = "";
-        hideSuggestions();
-        renderChosen();
-        toast(`“${text}” isn't in our catalogue yet — we'll skip it`, "warn");
+        // not in the library: go and find it
+        await webLookup(text);
       }
     } catch (err) {
       toast(err.message, "warn");
@@ -474,7 +544,13 @@
           ${miniPoster(movie, "mini")}
           <div class="chosen-body">
             <div class="chosen-title">${esc(movie.title)}</div>
-            ${confidence === "corrected" ? `<div class="chosen-fix">corrected from “${esc(query)}”</div>` : `<div class="chosen-fix" style="color:var(--muted)">${movie.year}</div>`}
+            ${
+              movie.source === "wikipedia"
+                ? `<div class="chosen-fix web">${movie.year || ""}${movie.year ? " · " : ""}from the web</div>`
+                : confidence === "corrected"
+                ? `<div class="chosen-fix">corrected from “${esc(query)}”</div>`
+                : `<div class="chosen-fix" style="color:var(--muted)">${movie.year || ""}</div>`
+            }
           </div>
           <button class="chosen-x" type="button" data-remove-chosen="${esc(movie.id)}" aria-label="Remove ${esc(movie.title)}">
             <svg class="ic"><use href="#i-x"/></svg>
@@ -543,9 +619,12 @@
       ...onboarding.unresolved,
     ];
     try {
+      const webFilms = [...onboarding.chosen.values()]
+        .map((c) => c.movie)
+        .filter((m) => m && m.source === "wikipedia");
       const { state: st } = await api("/likes", {
         method: "POST",
-        body: { movieIds: ids, titles },
+        body: { movieIds: ids, titles, movies: webFilms },
       });
       state = st;
     } catch (err) {
@@ -562,7 +641,9 @@
         const c = onboarding.chosen.get(m.id);
         const conf = c ? c.confidence : "exact";
         const tag =
-          conf === "corrected"
+          m.source === "wikipedia"
+            ? `<span class="tag tag-web">from the web</span>`
+            : conf === "corrected"
             ? `<span class="tag tag-fix">spelling corrected</span>`
             : conf === "weak"
             ? `<span class="tag tag-loose">close match</span>`
@@ -571,7 +652,7 @@
           ${miniPoster(m, "mini")}
           <div class="confirm-body">
             <div class="confirm-title">${esc(m.title)}${tag}</div>
-            <div class="confirm-meta">${m.year} · ${esc(m.genres.slice(0, 3).join(" / "))} · ${esc(m.industryName)} · ★ ${m.rating}</div>
+            <div class="confirm-meta">${m.year || "—"} · ${esc(m.genres.slice(0, 3).join(" / "))} · ${esc(m.industryName)}${hasRating(m) ? ` · ★ ${Number(m.rating).toFixed(1)}` : ""}</div>
           </div>
           <button class="chosen-x" type="button" data-unlike="${esc(m.id)}" aria-label="Remove ${esc(m.title)}">
             <svg class="ic"><use href="#i-x"/></svg>
@@ -666,7 +747,7 @@
             <span>${q.year}</span>
             <span>${esc(q.genres.slice(0, 2).join(" / "))}</span>
             <span>${runtime(q)}</span>
-            <span>★ ${q.rating}</span>
+            ${hasRating(q) ? `<span>★ ${Number(q.rating).toFixed(1)}</span>` : ""}
           </div>
           <p class="q-syn">${esc(q.synopsis)}</p>
         </div>
@@ -880,7 +961,7 @@
       </button>
       <div class="card-body">
         <h3 class="card-title">${esc(m.title)}</h3>
-        <div class="card-meta"><svg class="ic"><use href="#i-star"/></svg><span>${m.rating}</span><span>${m.year}</span><span>${runtime(m)}</span></div>
+        <div class="card-meta">${hasRating(m) ? `<svg class="ic"><use href="#i-star"/></svg><span>${Number(m.rating).toFixed(1)}</span>` : ""}<span>${m.year || "—"}</span>${runtime(m) ? `<span>${runtime(m)}</span>` : ""}${m.source === "wikipedia" ? `<span class="web-dot" title="Added from Wikipedia">web</span>` : ""}</div>
         <p class="card-desc">${esc(brief(m.synopsis))}</p>
         ${
           m.reasons
@@ -1008,7 +1089,7 @@
           <h2 class="modal-title" id="modalTitle">${esc(m.title)}</h2>
           <div class="modal-meta">
             <span class="tag tag-ok" style="margin:0">${m.match ? m.match + "% match" : "in your list"}</span>
-            <span>${m.year}</span><span>${runtime(m)}</span><span>★ ${m.rating}</span>
+            <span>${m.year || "—"}</span>${runtime(m) ? `<span>${runtime(m)}</span>` : ""}${hasRating(m) ? `<span>★ ${Number(m.rating).toFixed(1)}</span>` : ""}
           </div>
           <p class="modal-syn">${esc(m.synopsis)}</p>
           <div class="chip-row">${[...m.genres, m.industryName].map((g) => `<span class="mini-tag">${esc(g)}</span>`).join("")}</div>
@@ -1185,5 +1266,18 @@
     }
   }
 
+  // Show the real catalogue size on the signup screen (it grows with the importer).
+  async function setCatCount() {
+    const el = $("#catCount");
+    if (!el) return;
+    try {
+      const meta = await api("/catalogue");
+      if (meta && meta.count) el.textContent = Number(meta.count).toLocaleString("en-IN");
+    } catch (_) {
+      /* keep the fallback copy */
+    }
+  }
+
+  setCatCount();
   boot();
 })();

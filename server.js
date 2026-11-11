@@ -7,7 +7,9 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const engine = require("./src/engine");
+const lookup = require("./src/lookup");
 const { ALL_GENRES, ALL_INDUSTRIES, movies, byId } = require("./data/movies");
+lookup.init({ movies, byId, genres: ALL_GENRES, industries: require("./data/movies").INDUSTRIES });
 
 const PORT = process.env.PORT || 4173;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -17,6 +19,8 @@ const PUBLIC_DIR = path.join(ROOT, "public");
 // Falls back to ./data for local development.
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
+// Films discovered online, shared by every visitor of this server.
+const DISCOVERED_PATH = path.join(DATA_DIR, "discovered.json");
 
 /* ------------------------------------------------------------------ */
 /* persistence                                                         */
@@ -167,6 +171,37 @@ function serveStatic(req, res, pathname) {
 }
 
 /* ------------------------------------------------------------------ */
+/* online discovery                                                    */
+/* ------------------------------------------------------------------ */
+let discoveredDirty = false;
+
+function loadDiscovered() {
+  try {
+    if (!fs.existsSync(DISCOVERED_PATH)) return 0;
+    const list = JSON.parse(fs.readFileSync(DISCOVERED_PATH, "utf8"));
+    let n = 0;
+    for (const m of Array.isArray(list) ? list : []) if (lookup.register(m)) n++;
+    return n;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function saveDiscovered() {
+  if (!discoveredDirty) return;
+  discoveredDirty = false;
+  try {
+    const web = movies.filter((m) => String(m.id).startsWith("w-"));
+    fs.mkdirSync(path.dirname(DISCOVERED_PATH), { recursive: true });
+    fs.writeFileSync(DISCOVERED_PATH, JSON.stringify(web, null, 1));
+  } catch (_) {
+    /* read-only filesystem (serverless): discovery just won't persist */
+  }
+}
+
+loadDiscovered();
+
+/* ------------------------------------------------------------------ */
 /* routes                                                              */
 /* ------------------------------------------------------------------ */
 async function handleApi(req, res, url) {
@@ -174,7 +209,12 @@ async function handleApi(req, res, url) {
   const method = req.method.toUpperCase();
 
   /* ---------- public ---------- */
-  if (route === "/health") return sendJSON(res, 200, { ok: true, movies: movies.length });
+  if (route === "/health")
+    return sendJSON(res, 200, {
+      ok: true,
+      movies: movies.length,
+      discovered: movies.filter((m) => String(m.id).startsWith("w-")).length,
+    });
 
   if (route === "/catalogue" && method === "GET") {
     return sendJSON(res, 200, {
@@ -192,6 +232,12 @@ async function handleApi(req, res, url) {
       exact: r.score >= 0.995,
     }));
     return sendJSON(res, 200, { query: q, results });
+  }
+
+  if (route === "/lookup" && method === "GET") {
+    const q = url.searchParams.get("q") || "";
+    const candidates = await lookup.lookup(q, { limit: 5 });
+    return sendJSON(res, 200, { query: q, candidates });
   }
 
   if (route === "/resolve" && method === "POST") {
@@ -255,6 +301,14 @@ async function handleApi(req, res, url) {
 
   if (route === "/likes" && method === "POST") {
     const body = await readBody(req);
+    // Films the user confirmed from the web lookup: validate, then register so
+    // every engine path (search, questions, rank, feedback) treats them as normal.
+    if (Array.isArray(body.movies)) {
+      for (const raw of body.movies.slice(0, 30)) {
+        if (lookup.register(raw)) discoveredDirty = true;
+      }
+      if (discoveredDirty) saveDiscovered();
+    }
     const ids = (body.movieIds || []).filter((id) => byId.has(id));
     p.seedTitles = Array.isArray(body.titles)
       ? body.titles.slice(0, 80)

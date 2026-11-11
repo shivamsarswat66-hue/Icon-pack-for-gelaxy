@@ -829,3 +829,87 @@ ul { margin: 0; padding: 0; list-style: none; }
 @media (min-width: 900px) {
   .card-desc { font-size: 12.9px; }
 }
+
+/* ---------- online lookup (web-added films) ---------- */
+.sug-head {
+  padding: 10px 12px 6px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--text, #eef2f8);
+}
+.sug-head span { font-weight: 500; color: var(--muted, #93a1b8); }
+
+.sug-none {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.sug-web { margin-top: 2px; }
+.sug-hint { font-size: 12px; color: var(--muted, #93a1b8); line-height: 1.45; }
+
+.sug-loading { flex-direction: row; align-items: center; gap: 10px; }
+
+.spinner {
+  width: 15px; height: 15px; flex: 0 0 auto;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--accent, #ff7a45);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.sug-blurb {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.8px;
+  line-height: 1.45;
+  color: var(--muted, #93a1b8);
+}
+
+.sug-webitem { align-items: flex-start; }
+.sug-webitem .sug-thumb { margin-top: 2px; }
+
+.web-tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #bcd7ff;
+  background: rgba(94, 160, 255, 0.16);
+  border: 1px solid rgba(94, 160, 255, 0.32);
+  vertical-align: middle;
+}
+
+.chosen-fix.web { color: #8fb6ff; }
+
+/* Cards for films added from the web: no fake rating, just an honest marker. */
+.card-meta .web-dot {
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9db9e8;
+  background: rgba(110, 150, 220, 0.14);
+  border: 1px solid rgba(110, 150, 220, 0.28);
+}
+
+.tag-web {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #bcd7ff;
+  background: rgba(94, 160, 255, 0.16);
+  border: 1px solid rgba(94, 160, 255, 0.32);
+  vertical-align: middle;
+}

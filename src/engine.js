@@ -129,10 +129,12 @@ function search(rawQuery, limit = 6) {
     .map((m) => {
       let s = tokenScore(q, m.title);
       // small bonus for popularity/quality so ties break sensibly
-      s = Math.min(0.999, s + Math.max(0, (m.rating - 7) * 0.004));
+      if (Number.isFinite(m.rating)) s = Math.min(0.999, s + Math.max(0, (m.rating - 7) * 0.004));
       return { movie: m, score: s };
     })
-    .filter((x) => x.score > 0.45)
+    // Never suggest a film we don't believe in. Measured: real matches (incl. heavy
+    // typos like "shawshenk") score ≥0.90; junk ("animal" → Arrival) scores ≤0.55.
+    .filter((x) => x.score >= 0.68)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
   return scored;
@@ -357,7 +359,8 @@ function scoreMovie(profile, m, ctx) {
   // also reward a broad taste match when the user has not seeded films yet
   if (!profile.liked.length) close = gA * 0.7;
 
-  const quality = clamp((m.rating - 6.2) / 3.0, 0, 1);
+  // Web-added films have no rating: treat as neutral instead of NaN-poisoning the score.
+  const quality = Number.isFinite(m.rating) ? clamp((m.rating - 6.2) / 3.0, 0, 1) : 0.55;
   const indW = profile.industries[m.industry] || 0;
   const industry = sigmoid(indW / 1.5);
 
@@ -393,7 +396,7 @@ function reasonFor(profile, m, score) {
   }
   if (best && bestSim > 0.18) reasons.push(`Shares its DNA with ${best.title}`);
   if ((profile.industries[m.industry] || 0) > 1.5) reasons.push(`A standout in ${m.industryName}`);
-  if (m.rating >= 8.3) reasons.push(`Rated ${m.rating.toFixed(1)} — a modern classic`);
+  if (Number.isFinite(m.rating) && m.rating >= 8.3) reasons.push(`Rated ${m.rating.toFixed(1)} — a modern classic`);
   if (m.runtime && m.runtime <= 100) reasons.push("Short and sharp — under 100 minutes");
   if (!reasons.length) reasons.push(`A high-rated ${m.genres[0].toLowerCase()} film worth a shot`);
   return reasons.slice(0, 2);
@@ -435,7 +438,7 @@ function rank(profile, { limit = 60, offset = 0 } = {}) {
     const score = scoreMovie(profile, m, ctx);
     return { movie: m, score, reasons: reasonFor(profile, m, score) };
   });
-  pool.sort((a, b) => b.score - a.score || b.movie.rating - a.movie.rating);
+  pool.sort((a, b) => b.score - a.score || (b.movie.rating || 6.5) - (a.movie.rating || 6.5));
 
   // ---- diversity: cap how many of one lead-genre can dominate the list ----
   const cap = Math.max(3, Math.ceil(target / 7));
@@ -564,6 +567,7 @@ module.exports = {
   feedback,
   answerQuestion,
   rank,
+  candidates,
   nextQuestions,
   summarize,
   learn,
