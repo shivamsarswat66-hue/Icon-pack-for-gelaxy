@@ -213,6 +213,19 @@
       return jsonResponse(200, { state: buildState(rec), added: ids.length });
     }
 
+    if (pathname === "/api/register") {
+      let added = 0;
+      if (L && Array.isArray(body.movies)) {
+        for (const raw of body.movies.slice(0, 20)) {
+          if (L.register(raw)) {
+            added++;
+            saveDiscovered(L.sanitize(raw) || raw);
+          }
+        }
+      }
+      return jsonResponse(200, { ok: true, added });
+    }
+
     if (pathname === "/api/likes/remove") {
       const m = byId.get(body.movieId);
       if (m) {

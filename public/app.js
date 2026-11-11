@@ -470,6 +470,10 @@
       confidence: corrected ? "corrected" : "exact",
     });
     if (corrected) toast(`Fixed spelling → ${movie.title}`);
+    if (movie.source === "wikipedia") {
+      // cache it right away so a reload mid-onboarding doesn't lose it
+      api("/register", { method: "POST", body: { movies: [movie] } }).catch(() => {});
+    }
     input.value = "";
     hideSuggestions();
     renderChosen();

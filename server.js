@@ -318,6 +318,17 @@ async function handleApi(req, res, url) {
     return sendJSON(res, 200, { state: buildState(rec), added: ids.length });
   }
 
+  if (route === "/register" && method === "POST") {
+    const body = await readBody(req);
+    let added = 0;
+    for (const raw of (body.movies || []).slice(0, 20)) if (lookup.register(raw)) added++;
+    if (added) {
+      discoveredDirty = true;
+      saveDiscovered();
+    }
+    return sendJSON(res, 200, { ok: true, added, discovered: movies.filter((m) => String(m.id).startsWith("w-")).length });
+  }
+
   if (route === "/likes/remove" && method === "POST") {
     const body = await readBody(req);
     const m = byId.get(body.movieId);

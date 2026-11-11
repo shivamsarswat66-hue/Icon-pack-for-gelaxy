@@ -8,6 +8,10 @@ Works as a single responsive app on laptops, tablets and phones (tested from 320
 
 ![For you feed](docs/screenshot-app.png)
 
+*Films that aren't in the catalogue are looked up on Wikipedia/Wikidata and added only after you confirm:*
+
+![Online lookup](docs/screenshot-web-lookup.png)
+
 ---
 
 ## The flow
