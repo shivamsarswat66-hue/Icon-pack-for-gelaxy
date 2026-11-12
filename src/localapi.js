@@ -145,7 +145,9 @@
       const q = search.get("q") || "";
       if (!L) return jsonResponse(503, { error: "Lookup unavailable.", candidates: [] });
       // handle() may return a promise; the fetch shim awaits it
-      return L.lookup(q, { limit: 5 }).then((candidates) => jsonResponse(200, { query: q, candidates }));
+      return L.lookupDetailed(q, { limit: 5 }).then((r) =>
+        jsonResponse(200, { query: q, status: r.status, candidates: r.candidates || [] })
+      );
     }
 
     if (pathname === "/api/resolve") {

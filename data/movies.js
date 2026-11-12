@@ -76,13 +76,13 @@ const RAW = [
   ["City of God", 2002, "WO", 8.6, 130, "Fernando Meirelles", "Crime|Drama", "favela|brazil|ensemble|true-story|rise-and-fall|brutal", "Two boys grow up in a Rio housing project, one with a camera and one with a gun."],
 
   // ---------- Drama ----------
-  ["The Shawshank Redemption", 1994, "HW", 9.3, 142, "Frank Darabont", "Drama", "prison|friendship|hope|classic|emotional|slow-burn", "Two lifers build a friendship and a very long plan inside a corrupt prison."],
+  ["The Shawshank Redemption", 1994, "HW", 9.3, 142, "Frank Darabont", "Drama|Crime", "prison|friendship|hope|classic|emotional|slow-burn", "Two lifers build a friendship and a very long plan inside a corrupt prison."],
   ["Forrest Gump", 1994, "HW", 8.8, 142, "Robert Zemeckis", "Drama|Romance|Comedy", "history|feel-good|love|classic|emotional", "A kind man with no filter drifts through the biggest moments of the century."],
   ["Fight Club", 1999, "HW", 8.8, 139, "David Fincher", "Drama|Thriller", "alter-ego|anarchy|twist|dark|satire|cult", "An insomniac and a soap salesman start a club that gets out of hand."],
   ["American Beauty", 1999, "HW", 8.3, 122, "Sam Mendes", "Drama|Comedy", "suburbia|satire|dark|character-study|classic", "A suburban father wakes up from his life and starts behaving like a stranger."],
   ["Whiplash", 2014, "HW", 8.5, 106, "Damien Chazelle", "Drama|Music", "jazz|obsession|mentor|tension|intense", "A young drummer and a conductor fight over what greatness costs."],
   ["Black Swan", 2010, "HW", 8.0, 108, "Darren Aronofsky", "Drama|Thriller|Horror", "ballet|obsession|surreal|dark|psychological", "A ballerina chasing perfection starts losing the line between rehearsal and hallucination."],
-  ["Requiem for a Dream", 2000, "HW", 8.3, 102, "Darren Aronofsky", "Drama", "addiction|dark|surreal|brutal|character-study", "Four dreams and four addictions spiral down over one long, loud summer."],
+  ["Requiem for a Dream", 2000, "HW", 8.3, 102, "Darren Aronofsky", "Drama|Thriller", "addiction|dark|surreal|brutal|character-study", "Four dreams and four addictions spiral down over one long, loud summer."],
   ["The Shining", 1980, "HW", 8.4, 146, "Stanley Kubrick", "Horror|Drama|Mystery", "madness|isolation|winter|classic|atmospheric|surreal", "A family keeps a mountain hotel open all winter and the hotel keeps them."],
   ["2001: A Space Odyssey", 1968, "HW", 8.3, 149, "Stanley Kubrick", "Sci-Fi|Adventure|Mystery", "space|classic|surreal|mind-bending|slow-burn", "A black monolith nudges humanity forward, and a calm computer disagrees."],
   ["A Clockwork Orange", 1971, "HW", 8.3, 136, "Stanley Kubrick", "Crime|Drama|Sci-Fi", "dystopia|violence|satire|classic|stylized", "The state tries to cure a violent young man by removing his ability to choose."],
@@ -120,7 +120,7 @@ const RAW = [
   ["Queen", 2013, "BW", 8.1, 146, "Vikas Bahl", "Drama|Comedy|Adventure", "solo-travel|self-discovery|india|feel-good|friendship", "A jilted bride takes her honeymoon alone and comes back somebody new."],
   ["Zindagi Na Milegi Dobara", 2011, "BW", 8.1, 155, "Zoya Akhtar", "Drama|Adventure|Comedy", "road-trip|friendship|india|feel-good|spain", "Three friends take a road trip through Spain and each faces the fear they packed."],
   ["Barfi!", 2012, "BW", 8.1, 151, "Anurag Basu", "Romance|Comedy|Drama", "love|india|bittersweet|colorful|emotional", "A deaf-mute charmer and two women who love him in very different ways."],
-  ["Swades", 2004, "BW", 8.2, 189, "Ashutosh Gowariker", "Drama", "village|india|inspirational|emotional|social", "A NASA engineer returns to his village and finds a harder, slower problem worth solving."],
+  ["Swades", 2004, "BW", 8.2, 189, "Ashutosh Gowariker", "Drama|Family", "village|india|inspirational|emotional|social", "A NASA engineer returns to his village and finds a harder, slower problem worth solving."],
   ["Rang De Basanti", 2006, "BW", 8.1, 167, "Rakeysh Omprakash Mehra", "Drama|Romance|War", "friendship|patriotism|india|college|emotional", "Five carefree friends make a film about revolution and then need one."],
   ["Chak De! India", 2007, "BW", 8.3, 153, "Shimit Amin", "Sports|Drama", "hockey|underdog|india|team|inspirational", "A disgraced player coaches a women's hockey team nobody wants to fund."],
   ["Munna Bhai M.B.B.S.", 2003, "BW", 8.1, 156, "Rajkumar Hirani", "Comedy|Drama|Romance", "medical|friendship|mumbai|india|feel-good|fun", "A gangster enrolls in medical college and treats patients better than the syllabus."],
@@ -225,7 +225,7 @@ const RAW = [
   ["The Worst Person in the World", 2021, "EU", 7.6, 128, "Joachim Trier", "Romance|Drama|Comedy", "norwegian|coming-of-age|bittersweet|character-study|dialogue", "A woman in her twenties changes careers and lovers looking for a version of herself."],
   ["Portrait of a Lady on Fire", 2019, "EU", 8.1, 122, "Céline Sciamma", "Romance|Drama", "period|french|slow-burn|beautiful|bittersweet|strong-female-lead", "A painter is hired to secretly paint a bride, and the looking becomes mutual."],
   // ---------- extra crowd favourites ----------
-  ["Moonlight", 2016, "HW", 7.4, 111, "Barry Jenkins", "Drama", "identity|coming-of-age|slow-burn|beautiful|emotional|character-study", "A boy grows up in three chapters, each one asking who he is allowed to become."],
+  ["Moonlight", 2016, "HW", 7.4, 111, "Barry Jenkins", "Drama|Romance", "identity|coming-of-age|slow-burn|beautiful|emotional|character-study", "A boy grows up in three chapters, each one asking who he is allowed to become."],
   ["Gladiator", 2000, "HW", 8.5, 155, "Ridley Scott", "Action|Drama|Adventure", "revenge|epic|empire|spectacle|classic|brutal", "A betrayed general fights his way up through the arena to reach the emperor."],
   ["Joker", 2019, "HW", 8.4, 122, "Todd Phillips", "Drama|Thriller|Crime", "character-study|dark|villain|society|obsession|dark-comedy", "A failing comedian and a failing city bring out the worst in each other."],
   ["The Batman", 2022, "HW", 7.8, 176, "Matt Reeves", "Action|Crime|Mystery", "detective|neo-noir|dark|atmospheric|villain|slow-burn", "A detective in a bat suit follows a serial killer through a very wet Gotham."],
@@ -257,7 +257,7 @@ const RAW = [
   ["Pathaan", 2023, "BW", 5.9, 146, "Siddharth Anand", "Action|Thriller", "spy|spectacle|stunts|patriotism|india", "An exiled spy is pulled back in to stop a rogue outfit from burning the border down."],
   ["Stree", 2018, "BW", 7.5, 128, "Amar Kaushik", "Horror|Comedy", "ghost|small-town|humor|curse|india", "A town blames a vengeful spirit for its missing men, and one tailor decides to flirt with her."],
   ["Badhaai Ho", 2018, "BW", 8.0, 124, "Amit Sharma", "Comedy|Drama|Family", "family|feel-good|marriage|society|humor|india", "A grown man's world tilts sideways when his parents announce a surprise baby."],
-  ["Masaan", 2015, "BW", 8.1, 109, "Neeraj Ghaywan", "Drama", "grief|class|varanasi|hope|social|india", "Two strangers in Varanasi carry the dead weight of their families' shame and keep walking."],
+  ["Masaan", 2015, "BW", 8.1, 109, "Neeraj Ghaywan", "Drama|Romance", "grief|class|varanasi|hope|social|india", "Two strangers in Varanasi carry the dead weight of their families' shame and keep walking."],
   ["Newton", 2017, "BW", 7.7, 106, "Amit Masurkar", "Drama|Comedy", "election|idealism|village|satire|india", "An honest clerk tries to run a free election in a forest village that has stopped believing in them."],
   ["The Lunchbox", 2013, "BW", 7.8, 104, "Ritesh Batra", "Drama|Romance", "letters|loneliness|mumbai|food|hope|india", "A misdelivered lunchbox starts a correspondence between two people who needed someone to talk to."],
   ["Vikram", 2022, "IN", 8.3, 175, "Lokesh Kanagaraj", "Action|Thriller|Crime", "undercover|revenge|cartel|twist|investigation|india", "A black-ops agent hunts a drug syndicate while a mysterious old man dismantles it from inside."],
@@ -265,7 +265,7 @@ const RAW = [
   ["Asuran", 2019, "IN", 8.4, 141, "Vetrimaaran", "Action|Drama|Crime", "caste|land|revenge|brutal|village|india", "A farmer hides his violent past while his son's death forces the whole caste war into the open."],
   ["Soorarai Pottru", 2020, "IN", 8.4, 153, "Sudha Kongara", "Drama|Biography", "aviation|underdog|inspirational|true-story|india|dreams", "A former airman fights a monopoly to start an airline for people who have never flown."],
   ["Jai Bhim", 2021, "IN", 8.7, 164, "T. J. Gnanavel", "Drama|Crime|Biography", "courtroom|justice|social|true-story|brutal|india", "A lawyer takes on a police force that made a man disappear for asking about his wife."],
-  ["Pariyerum Perumal", 2018, "IN", 8.6, 154, "Mari Selvaraj", "Drama", "caste|college|friendship|social|india|coming-of-age", "A first-generation law student learns exactly how much his caste costs him every single day."],
+  ["Pariyerum Perumal", 2018, "IN", 8.6, 154, "Mari Selvaraj", "Drama|Crime", "caste|college|friendship|social|india|coming-of-age", "A first-generation law student learns exactly how much his caste costs him every single day."],
   ["Ratsasan", 2018, "IN", 8.3, 170, "Ram Kumar", "Thriller|Crime|Mystery", "serial-killer|investigation|dark|twist|police|india", "A cop chasing a child killer realises the profile fits someone standing very close to him."],
   ["96", 2018, "IN", 8.4, 158, "C. Prem Kumar", "Romance|Drama", "school|nostalgia|love|reunion|bittersweet|india", "A school reunion puts two people back in the same room as the teenagers they never stopped being."],
   ["Anbe Sivam", 2003, "IN", 8.6, 160, "Sundar C.", "Drama|Comedy", "road-trip|idealism|friendship|faith|india|feel-good", "A stranded optimist and a cynical ad man argue their way across India about God and kindness."],
@@ -286,6 +286,66 @@ const RAW = [
   ["Vada Chennai", 2018, "IN", 8.2, 164, "Vetrimaaran", "Crime|Drama|Action", "gangster|housing|nonlinear|brutal|india", "A carrom player becomes a pawn in a housing board war and slowly learns to play it himself."],
 
 ];
+
+/* ---------------------------------------------------------------- synopses
+ * Some imported films only ever had a cast list or a credits line as their
+ * "description" ("The film stars X and Y."). A card that says that tells you
+ * nothing about whether you want to watch the thing, so those films get a line
+ * built from their own genres and themes instead — factual, never invented.
+ */
+const PLOT_WORDS = /\b(follows|tells|centres|centers|revolves|is about|when|story of|chronicles|narrates|after|set in|struggles|attempts|seeks|tries|journey|plot|must|finds)\b/i;
+const WEAK_SYNOPSIS = (s) => {
+  const t = String(s || "").trim();
+  if (!t) return true;
+  if (/^(the film |it )?(stars?|starring|features?|marked the debut)/i.test(t)) return true;
+  if (/^(a|an) \d{4} .{0,60}film from .{0,40}, directed by/i.test(t)) return true;
+  if (/\b(stars?|starring|features?)\b/i.test(t) && t.length < 210) return true;
+  // "X is a 2004 Indian Hindi-language film directed and produced by Y" — credits only
+  if (/^(\S+ ){1,4}is a \d{4}[^.]{0,90}film\b/i.test(t) && !PLOT_WORDS.test(t) && t.length < 200) return true;
+  return false;
+};
+
+// words that describe the *market*, not the film
+const GENERIC_THEMES = new Set(["india", "indian", "hindi", "bollywood", "hollywood", "tamil", "telugu", "malayalam", "kannada", "film", "cinema"]);
+
+const GENRE_WORD = {
+  Action: "action", Adventure: "adventure", Animation: "animated", Biography: "biographical",
+  Comedy: "comedy", Crime: "crime", Drama: "drama", Family: "family", Fantasy: "fantasy",
+  Horror: "horror", Music: "musical", Musical: "musical", Mystery: "mystery", Romance: "romantic",
+  "Sci-Fi": "science-fiction", Sports: "sports", Thriller: "thriller", War: "war", Western: "western",
+};
+
+const listPhrase = (items) =>
+  items.length <= 1
+    ? items[0] || ""
+    : items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
+
+const MODIFIER_GENRES = new Set(["romantic", "musical", "animated", "biographical", "science-fiction"]);
+const INDUSTRY_PHRASE = {
+  Bollywood: "Bollywood",
+  Hollywood: "Hollywood",
+  "Indian Regional": "Indian regional cinema",
+  "European / UK": "European cinema",
+  "Japanese & Anime": "Japanese cinema",
+  Korean: "Korean cinema",
+  "World Cinema": "world cinema",
+};
+
+function themedSynopsis(m) {
+  const raw = (m.genres || []).slice(0, 2).map((g) => GENRE_WORD[g] || String(g).toLowerCase());
+  if (!raw.length) return "";
+  // "romantic drama", not "drama romantic"
+  const genres = raw.slice().sort((a, b) => (MODIFIER_GENRES.has(b) ? 1 : 0) - (MODIFIER_GENRES.has(a) ? 1 : 0));
+  const lead = genres[0];
+  const what = genres.length > 1 ? genres.join(" ") : `${genres[0]} film`;
+  const where = INDUSTRY_PHRASE[m.industryName] || String(m.industryName || "world cinema").toLowerCase();
+  const head = `${/^[aeiou]/.test(lead) ? "An" : "A"} ${what} from ${where}`;
+  const by = m.director ? `, directed by ${m.director}` : "";
+  const themes = (m.keywords || [])
+    .filter((k) => k && k.length > 2 && !GENERIC_THEMES.has(String(k).toLowerCase()))
+    .slice(0, 2);
+  return themes.length ? `${head}${by} — themes of ${listPhrase(themes)}.` : `${head}${by}.`;
+}
 
 const INDUSTRIES = {
   HW: "Hollywood",
@@ -373,6 +433,14 @@ const movies = CURATED_UNIQUE.concat(
     return true;
   })
 );
+
+// Films whose stored description is a cast list get a themed line instead.
+for (const m of movies) {
+  if (WEAK_SYNOPSIS(m.synopsis)) {
+    const themed = themedSynopsis(m);
+    if (themed) m.synopsis = themed;
+  }
+}
 
 const byId = new Map(movies.map((m) => [m.id, m]));
 

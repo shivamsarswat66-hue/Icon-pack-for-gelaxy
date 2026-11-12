@@ -316,95 +316,260 @@ function answerQuestion(profile, id, yes) {
 /* ------------------------------------------------------------------ */
 /* scoring                                                             */
 /* ------------------------------------------------------------------ */
+/*
+ * What changed and why
+ * --------------------
+ * The first version summed raw genre weights. "Drama" is on ~60% of the
+ * catalogue and "Music" on ~5%, so one liked drama outweighed a loved musical
+ * and every list drifted towards high-IMDb dramas. Genres and themes are now
+ * weighted by how *rare* they are in the catalogue (idf), which is what makes
+ * a taste in Music or Horror actually pull its weight.
+ *
+ * The score is a blend of eight signals, each normalised to 0..1:
+ *   genreFit     rarity-weighted match against declared + learned genres
+ *   likeFit      item-item similarity to the films the user loved
+ *   kwFit        theme (keyword) affinity, signed so dislikes subtract
+ *   quality      rating prior — a mild tie-breaker, not the driver
+ *   popularity   how well-documented a film is (stops obscurities winning)
+ *   industryFit  language/industry affinity
+ *   eraFit       how close it sits to the era the user actually watches
+ *   directorFit  same director as a film they loved
+ *
+ * Matching then goes through (a) an absolute match% so the number means
+ * something, (b) a floor so a 45%-ish film is never offered, and (c) an MMR
+ * pass so eight near-identical picks don't fill the grid.
+ */
 const sigmoid = (x) => 1 / (1 + Math.exp(-x));
-const jaccard = (a, b) => {
-  const A = new Set(a);
-  const B = new Set(b);
-  if (!A.size || !B.size) return 0;
-  let inter = 0;
-  for (const x of A) if (B.has(x)) inter++;
-  return inter / (A.size + B.size - inter);
-};
 
-function profileKeywordNorm(profile) {
-  let s = 0;
-  for (const v of Object.values(profile.keywords)) s += v * v;
-  return Math.sqrt(s) || 1;
+const catStats = (() => {
+  const N = Math.max(1, movies.length);
+  const gf = {};
+  const kf = {};
+  for (const m of movies) {
+    for (const g of m.genres || []) gf[g] = (gf[g] || 0) + 1;
+    for (const k of m.keywords || []) kf[k] = (kf[k] || 0) + 1;
+  }
+  const idf = (f) => clamp(Math.log((N + 1) / (f + 1)) + 0.25, 0.5, 2.8);
+  const gIdf = {};
+  const kIdf = {};
+  for (const [g, f] of Object.entries(gf)) gIdf[g] = idf(f);
+  for (const [k, f] of Object.entries(kf)) kIdf[k] = idf(f);
+  // how documented a film is: imported films carry sitelink counts
+  const popMax = Math.max(1, ...movies.map((m) => (Number.isFinite(m.popularity) ? m.popularity : 0)));
+  return { N, gf, kfmax: 0, gIdf, kIdf, popMax };
+})();
+
+const gW = (g) => catStats.gIdf[g] || 1.1; // web-added films fall back to a mid weight
+const kW = (k) => catStats.kIdf[k] || 1.1;
+
+/** cosine over rarity-weighted genre sets */
+function cosGenres(a, b) {
+  const A = new Set(a.genres || []);
+  const B = new Set(b.genres || []);
+  let dot = 0;
+  for (const g of A) if (B.has(g)) dot += gW(g) * gW(g);
+  if (!dot) return 0;
+  let na = 0;
+  let nb = 0;
+  for (const g of A) na += gW(g) * gW(g);
+  for (const g of B) nb += gW(g) * gW(g);
+  return dot / Math.sqrt(na * nb);
 }
 
-function scoreMovie(profile, m, ctx) {
-  // genre affinity
-  let gRaw = 0;
-  for (const g of m.genres) gRaw += profile.genres[g] || 0;
-  const gA = sigmoid(gRaw / 2.1);
-
-  // keyword affinity (cosine-ish against the candidate's keyword vector)
-  const norm = ctx.kwNorm;
+/** cosine over rarity-weighted themes */
+function cosKeywords(a, b) {
+  const A = new Set(a.keywords || []);
+  const B = new Set(b.keywords || []);
   let dot = 0;
-  for (const k of m.keywords) dot += profile.keywords[k] || 0;
-  const kwProfile = clamp(dot / (norm * 1.7), -1, 1) * 0.5 + 0.5;
+  for (const k of A) if (B.has(k)) dot += kW(k) * kW(k);
+  if (!dot) return 0;
+  let na = 0;
+  let nb = 0;
+  for (const k of A) na += kW(k) * kW(k);
+  for (const k of B) nb += kW(k) * kW(k);
+  return dot / Math.sqrt(na * nb);
+}
 
-  // similarity to loved films
-  let close = 0;
+function eraFit(profile, m, ctx) {
+  if (!Number.isFinite(m.year)) return 0.5;
+  const target = ctx.eraTarget;
+  return clamp(1 - Math.abs(m.year - target) / 26, 0, 1);
+}
+
+function qualityOf(m) {
+  // Web-added films have no rating: neutral, never NaN, never a fake 0.
+  return Number.isFinite(m.rating) ? clamp((m.rating - 5.8) / 3.4, 0, 1) : 0.5;
+}
+
+function popularityOf(m) {
+  const p = Number.isFinite(m.popularity) ? m.popularity : 0;
+  if (!p) return Number.isFinite(m.rating) ? clamp((m.rating - 6) / 4, 0, 1) * 0.55 : 0.45;
+  return clamp(Math.log10(1 + p) / Math.log10(1 + catStats.popMax), 0, 1);
+}
+
+/** how much a film looks like the films the user said they loved */
+function likeFit(profile, m, ctx) {
+  if (!profile.liked.length) return 0.55; // no seeds yet: stay neutral, genre carries it
+  let best = 0;
+  let sum = 0;
+  let n = 0;
   for (const id of profile.liked) {
     const l = byId.get(id);
-    if (!l) continue;
-    const gSim = jaccard(m.genres, l.genres);
-    const kSim = jaccard(m.keywords, l.keywords);
-    const eraSim = 1 - Math.min(Math.abs(m.year - l.year) / 40, 1);
-    const sameDirector = l.director === m.director ? 1 : 0;
-    const s = 0.5 * gSim + 0.3 * kSim + 0.08 * eraSim + 0.12 * sameDirector;
-    if (s > close) close = s;
+    if (!l || l.id === m.id) continue;
+    n++;
+    const s =
+      0.52 * cosGenres(m, l) +
+      0.34 * cosKeywords(m, l) +
+      0.09 * eraFit(profile, m, { eraTarget: l.year || ctx.eraTarget }) +
+      0.05 * (l.director && l.director === m.director ? 1 : 0);
+    sum += s;
+    if (s > best) best = s;
   }
-  // also reward a broad taste match when the user has not seeded films yet
-  if (!profile.liked.length) close = gA * 0.7;
-
-  // Web-added films have no rating: treat as neutral instead of NaN-poisoning the score.
-  const quality = Number.isFinite(m.rating) ? clamp((m.rating - 6.2) / 3.0, 0, 1) : 0.55;
-  const indW = profile.industries[m.industry] || 0;
-  const industry = sigmoid(indW / 1.5);
-
-  // gentle novelty: nudge neighbours of the taste rather than clones
-  const novelty = 1 - jaccard(m.genres, profile.liked.flatMap((id) => byId.get(id)?.genres || []));
-
-  let score =
-    0.32 * gA + 0.22 * close + 0.18 * kwProfile + 0.14 * quality + 0.07 * industry + 0.07 * novelty;
-
-  // hard penalties for things the user has rejected
-  for (const k of m.keywords) if ((profile.keywords[k] || 0) <= -1.5) score -= 0.12;
-  if ((profile.genres[m.genres[0]] || 0) <= -2) score -= 0.15;
-
-  return clamp(score, 0, 1);
+  if (!n) return 0.55;
+  // max rewards "more like my favourite"; mean keeps a broad taste broad
+  return clamp(0.6 * best + 0.4 * (sum / n), 0, 1);
 }
 
-function reasonFor(profile, m, score) {
-  const reasons = [];
-  const genres = [...m.genres].sort((a, b) => (profile.genres[b] || 0) - (profile.genres[a] || 0));
-  const lead = genres.slice(0, 2).filter((g) => (profile.genres[g] || 0) > 0.6);
-  if (lead.length) reasons.push(`Strong match for your ${lead.join(" + ")} taste`);
+function genreFitOf(profile, m) {
+  let num = 0;
+  let den = 0;
+  (m.genres || []).forEach((g, i) => {
+    const weight = i === 0 ? 1 : 0.74;
+    const rarity = gW(g);
+    num += weight * rarity * (profile.genres[g] || 0);
+    den += weight * rarity * 3.4;
+  });
+  if (!den) return 0.45;
+  return sigmoid(2.0 * (num / den));
+}
 
-  let best = null;
+function keywordFitOf(profile, m) {
+  let num = 0;
+  let mag = 0;
+  for (const k of m.keywords || []) {
+    const rarity = kW(k);
+    num += rarity * (profile.keywords[k] || 0);
+    mag += rarity * rarity;
+  }
+  if (!mag) return 0.45;
+  return sigmoid(1.5 * (num / Math.sqrt(mag * 2.2)));
+}
+
+function industryFitOf(profile, m) {
+  const w = profile.industries[m.industry] || 0;
+  // Neutral (0.5) when the user has expressed no opinion about this industry.
+  return clamp(0.5 + Math.tanh(w / 1.8) * 0.5, 0, 1);
+}
+
+const WEIGHTS = {
+  genre: 0.26,
+  like: 0.24,
+  keyword: 0.12,
+  quality: 0.14,
+  popularity: 0.05,
+  industry: 0.08,
+  era: 0.06,
+  director: 0.06,
+};
+
+function scoreMovie(profile, m, ctx) {
+  const g = genreFitOf(profile, m);
+  const l = likeFit(profile, m, ctx);
+  const k = keywordFitOf(profile, m);
+  const q = qualityOf(m);
+  const p = popularityOf(m);
+  const ind = industryFitOf(profile, m);
+  const era = eraFit(profile, m, ctx);
+  const dir = m.director && ctx.lovedDirectors.has(m.director) ? 1 : 0;
+
+  const raw =
+    WEIGHTS.genre * g +
+    WEIGHTS.like * l +
+    WEIGHTS.keyword * k +
+    WEIGHTS.quality * q +
+    WEIGHTS.popularity * p +
+    WEIGHTS.industry * ind +
+    WEIGHTS.era * era +
+    WEIGHTS.director * dir;
+
+  // things the user actively rejected pull the score down
+  let penalty = 0;
+  // A 6.2-rated sequel is not a recommendation, however well its genres fit.
+  if (Number.isFinite(m.rating) && m.rating < 6.9) penalty += (6.9 - m.rating) * 0.045;
+  for (const g2 of m.genres || []) if ((profile.genres[g2] || 0) <= -2.5) penalty += 0.06;
+  for (const k2 of m.keywords || []) if ((profile.keywords[k2] || 0) <= -1.5) penalty += 0.05;
+  if (m.director && ctx.dislikedDirectors.has(m.director)) penalty += 0.1;
+
+  return clamp(raw - penalty, 0, 1);
+}
+
+/** Absolute match% — 90+ is a bullseye, 60s is a stretch, below the floor is hidden. */
+const matchOf = (score) => Math.round(clamp(28 + 72 * score, 45, 97));
+
+function reasonFor(profile, m, score, ctx) {
+  const out = [];
+  // 1. the most specific explanation available: a film they loved
+  let closest = null;
   let bestSim = 0;
   for (const id of profile.liked) {
     const l = byId.get(id);
     if (!l || l.id === m.id) continue;
-    const sim = 0.55 * jaccard(m.genres, l.genres) + 0.45 * jaccard(m.keywords, l.keywords);
+    const sim = 0.6 * cosGenres(m, l) + 0.4 * cosKeywords(m, l);
     if (sim > bestSim) {
       bestSim = sim;
-      best = l;
+      closest = l;
     }
   }
-  if (best && bestSim > 0.18) reasons.push(`Shares its DNA with ${best.title}`);
-  if ((profile.industries[m.industry] || 0) > 1.5) reasons.push(`A standout in ${m.industryName}`);
-  if (Number.isFinite(m.rating) && m.rating >= 8.3) reasons.push(`Rated ${m.rating.toFixed(1)} — a modern classic`);
-  if (m.runtime && m.runtime <= 100) reasons.push("Short and sharp — under 100 minutes");
-  if (!reasons.length) reasons.push(`A high-rated ${m.genres[0].toLowerCase()} film worth a shot`);
-  return reasons.slice(0, 2);
+  if (m.director && ctx.lovedDirectors.has(m.director)) {
+    out.push(`Same director as a film you loved — ${m.director}`);
+  } else if (closest && bestSim > 0.3) {
+    const templates = [
+      `In the same vein as ${closest.title}`,
+      `Because you loved ${closest.title}`,
+      `If ${closest.title} worked for you`,
+      `Close to ${closest.title}`,
+    ];
+    // stable per film, so the same card always explains itself the same way
+    let h = 0;
+    for (const ch of String(m.id)) h = (h * 31 + ch.charCodeAt(0)) % 9973;
+    out.push(templates[h % templates.length]);
+  }
+
+  // 2. the genre story, using the film's *most distinctive* matching genre
+  const matched = (m.genres || [])
+    .map((g) => ({ g, w: (profile.genres[g] || 0) * gW(g) }))
+    .filter((x) => x.w > 0.9)
+    .sort((a, b) => b.w - a.w);
+  if (matched.length && out.length < 2) {
+    const names = matched.slice(0, 2).map((x) => x.g);
+    out.push(names.length > 1 ? `Your ${names.join(" + ")} taste` : `Your strongest genre: ${names[0]}`);
+  }
+
+  // 3. evidence from the questioning, when it exists
+  if (out.length < 2 && profile.liked.length + Object.keys(profile.answers).length >= 3) {
+    const similarAnswers = (m.genres || []).filter((g) => (profile.genres[g] || 0) > 1.5);
+    if (similarAnswers.length && (profile.industries[m.industry] || 0) > 1.2) {
+      out.push(`${m.industryName} — the territory you keep picking`);
+    }
+  }
+
+  // 4. fallbacks that still say something true
+  if (out.length < 2 && Number.isFinite(m.rating) && m.rating >= 8.2) out.push(`Rated ${m.rating.toFixed(1)}`);
+  if (out.length < 2 && m.runtime && m.runtime <= 105) out.push("Short and sharp — under 1h 45m");
+  if (!out.length) out.push(`A ${(m.genres || ["film"])[0].toLowerCase()} film the catalogue rates highly`);
+  return out.slice(0, 2);
 }
 
 /** Everything the ranker needs that does not depend on the candidate. */
 function buildCtx(profile) {
-  return { kwNorm: profileKeywordNorm(profile) };
+  const loved = profile.liked.map((id) => byId.get(id)).filter(Boolean);
+  const lovedDirectors = new Set(loved.map((m) => m.director).filter(Boolean));
+  const dislikedDirectors = new Set(
+    profile.disliked.map((id) => byId.get(id)).filter(Boolean).map((m) => m.director).filter(Boolean)
+  );
+  const years = loved.map((m) => m.year).filter(Number.isFinite).sort((a, b) => a - b);
+  const eraTarget = years.length ? years[Math.floor(years.length / 2)] : 2008;
+  return { lovedDirectors, dislikedDirectors, eraTarget, loved };
 }
 
 /** Films already loved / rejected / seen / saved are not "new picks". */
@@ -418,17 +583,43 @@ function candidates(profile) {
   return movies.filter((m) => !exclude.has(m.id));
 }
 
-/** Stretch raw scores into a friendly, human 56–98% match band. */
-function calibrate(items) {
-  if (!items.length) return items;
-  const scores = items.map((i) => i.score);
-  const min = Math.min(...scores);
-  const max = Math.max(...scores);
-  const span = max - min || 1;
-  return items.map((i) => ({
-    ...i,
-    match: Math.round(56 + ((i.score - min) / span) * 42),
-  }));
+/**
+ * MMR: pick the best film, then repeatedly the film that is good *and* not a
+ * rerun of something already picked. Without this, six Nolan films and four
+ * Marvel films fill the grid and the list feels machine-made.
+ */
+function diversify(pool, target, lambda = 0.36) {
+  const picked = [];
+  const leadCount = new Map();
+  const rest = pool.slice();
+  while (rest.length && picked.length < target) {
+    let bestIdx = 0;
+    let bestVal = -Infinity;
+    const scan = Math.min(rest.length, 80); // scan a window: plenty, and fast
+    for (let i = 0; i < scan; i++) {
+      const item = rest[i];
+      let clash = 0;
+      for (const p of picked) {
+        const sim = 0.55 * cosGenres(item.movie, p.movie) + 0.45 * cosKeywords(item.movie, p.movie);
+        if (sim > clash) clash = sim;
+      }
+      // ...and a soft cap on how many picks can share a lead genre, so a strongly
+      // Sci-Fi profile still gets Sci-Fi, just not 20 of them in a row.
+      const lead = (item.movie.genres || ["Drama"])[0];
+      const over = (leadCount.get(lead) || 0);
+      const val = item.score - lambda * clash - 0.04 * over;
+      if (val > bestVal) {
+        bestVal = val;
+        bestIdx = i;
+      }
+    }
+    const chosen = rest[bestIdx];
+    const lead = (chosen.movie.genres || ["Drama"])[0];
+    leadCount.set(lead, (leadCount.get(lead) || 0) + 1);
+    picked.push(chosen);
+    rest.splice(bestIdx, 1);
+  }
+  return picked;
 }
 
 function rank(profile, { limit = 60, offset = 0 } = {}) {
@@ -436,41 +627,35 @@ function rank(profile, { limit = 60, offset = 0 } = {}) {
   const target = Math.max(1, limit + offset);
   const pool = candidates(profile).map((m) => {
     const score = scoreMovie(profile, m, ctx);
-    return { movie: m, score, reasons: reasonFor(profile, m, score) };
+    return { movie: m, score, reasons: reasonFor(profile, m, score, ctx) };
   });
-  pool.sort((a, b) => b.score - a.score || (b.movie.rating || 6.5) - (a.movie.rating || 6.5));
 
-  // ---- diversity: cap how many of one lead-genre can dominate the list ----
-  const cap = Math.max(3, Math.ceil(target / 7));
-  const perGenre = new Map();
-  const picked = [];
-  const overflow = [];
-  for (const item of pool) {
-    const g = item.movie.genres[0];
-    const n = perGenre.get(g) || 0;
-    if (n < cap) {
-      perGenre.set(g, n + 1);
-      picked.push(item);
-    } else overflow.push(item);
-    if (picked.length >= target) break;
-  }
-  if (picked.length < target) {
-    for (const item of overflow) {
-      if (picked.length >= target) break;
-      picked.push(item);
-    }
-  }
-  return calibrate(picked.slice(offset, offset + limit)).map((item) => ({
+  // A floor keeps junk out: below this a card would be padding, not a suggestion.
+  const FLOOR = 0.40;
+  let strong = pool.filter((x) => x.score >= FLOOR);
+  if (strong.length < Math.min(target, 24)) strong = pool; // tiny catalogue safety valve
+  strong.sort((a, b) => b.score - a.score);
+
+  const chosen = diversify(strong, target)
+    .slice()
+    .sort((a, b) => b.score - a.score); // best first: a list that reads as ranked
+  return chosen.slice(offset, offset + limit).map((item) => ({
     ...item.movie,
     score: Number(item.score.toFixed(4)),
-    match: item.match,
+    match: matchOf(item.score),
     reasons: item.reasons,
   }));
 }
 
 /**
- * Probe questions: a spread of "would you watch this?" cards chosen to
- * separate genres fastest, mixing safe bets with exploratory picks.
+ * Probe questions: "would you watch this?".
+ *
+ * The old version rotated blindly through genres. A question is only worth
+ * asking when the answer is genuinely uncertain — a film the engine is sure
+ * about teaches it nothing. So each candidate is scored on how *close to the
+ * decision boundary* it sits (uncertainty), tempered by whether the user is
+ * likely to have heard of it, and spread across genres so a run of eight
+ * questions probes eight different parts of the taste space.
  */
 function nextQuestions(profile, count = 8) {
   const ctx = buildCtx(profile);
@@ -481,45 +666,56 @@ function nextQuestions(profile, count = 8) {
     ...profile.watchlist,
     ...profile.asked,
   ]);
+
   const pool = movies
     .filter((m) => !skip.has(m.id))
-    .map((m) => ({ movie: m, score: scoreMovie(profile, m, ctx) }))
-    .sort((a, b) => b.score - a.score);
+    .map((m) => {
+      const score = scoreMovie(profile, m, ctx);
+      const uncertainty = 1 - Math.abs(score - 0.5) * 2; // peaks at a coin-flip
+      const value =
+        0.52 * uncertainty +
+        0.20 * qualityOf(m) +
+        0.16 * popularityOf(m) +
+        0.12 * clamp((gW((m.genres || ["Drama"])[0]) - 0.8) / 2, 0, 1);
+      return { movie: m, score, value };
+    })
+    .sort((a, b) => b.value - a.value);
 
-  if (!pool.length) return [];
+  // bucket by lead genre and rotate: strong genres first, unexplored ones after
   const buckets = new Map();
   for (const item of pool) {
-    const g = item.movie.genres[0];
+    const g = (item.movie.genres || ["Drama"])[0];
     if (!buckets.has(g)) buckets.set(g, []);
     buckets.get(g).push(item);
   }
-  // rotate through genres, taking the best remaining film of each
-  const order = [...buckets.keys()].sort(
-    (a, b) => (profile.genres[b] || 0) - (profile.genres[a] || 0)
-  );
+  const order = [...buckets.keys()].sort((a, b) => {
+    const wa = profile.genres[a] || 0;
+    const wb = profile.genres[b] || 0;
+    return wb - wa;
+  });
+
   const out = [];
-  let round = 0;
-  while (out.length < count && round < 12) {
+  const cursors = new Map(order.map((g) => [g, 0]));
+  let guard = 0;
+  while (out.length < count && guard < count * 12) {
+    guard++;
     for (const g of order) {
       if (out.length >= count) break;
       const b = buckets.get(g);
-      // alternate: confident pick, then a deeper cut, to learn faster
-      const idx = round === 0 ? 0 : Math.min(b.length - 1, round * 2);
-      const item = b[idx];
-      if (!item) continue;
+      const i = cursors.get(g);
+      if (!b || i >= b.length) continue;
+      cursors.set(g, i + 1);
+      const item = b[i];
       if (out.some((o) => o.id === item.movie.id)) continue;
       out.push({
         ...item.movie,
         score: item.score,
-        reasons: reasonFor(profile, item.movie, item.score),
+        match: matchOf(item.score),
+        reasons: reasonFor(profile, item.movie, item.score, ctx),
       });
     }
-    round++;
   }
-  return calibrate(out.slice(0, count)).map((item) => {
-    const { score, ...movie } = item;
-    return { ...movie, match: item.match };
-  });
+  return out.slice(0, count);
 }
 
 function summarize(profile) {

@@ -236,8 +236,12 @@ async function handleApi(req, res, url) {
 
   if (route === "/lookup" && method === "GET") {
     const q = url.searchParams.get("q") || "";
-    const candidates = await lookup.lookup(q, { limit: 5 });
-    return sendJSON(res, 200, { query: q, candidates });
+    const result = await lookup.lookupDetailed(q, { limit: 5 });
+    return sendJSON(res, 200, {
+      query: q,
+      status: result.status,
+      candidates: result.candidates || [],
+    });
   }
 
   if (route === "/resolve" && method === "POST") {

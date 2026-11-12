@@ -81,6 +81,66 @@ it("resolveOne bands are exact / corrected / weak / none", () => {
   assert.strictEqual(engine.resolveOne("kaanekkaane").movie, null);
 });
 
+console.log("\nengine: recommendation quality");
+const likedIds = (titles) =>
+  titles.map((t) => [...byId.values()].find((m) => m.title.toLowerCase() === t.toLowerCase())?.id).filter(Boolean);
+function tasteProfile(genres, titles) {
+  const p = engine.newProfile();
+  engine.setGenres(p, genres);
+  engine.addLiked(p, likedIds(titles));
+  return p;
+}
+
+it("a strong profile never gets a badly-rated film as a suggestion", () => {
+  const p = tasteProfile(["Romance", "Music"], ["Rockstar", "Tamasha", "Aashiqui 2"]);
+  const picks = engine.rank(p, { limit: 60 });
+  const junk = picks.filter((m) => Number.isFinite(m.rating) && m.rating < 6.6);
+  assert.strictEqual(junk.length, 0, "low-rated picks leaked in: " + junk.map((m) => `${m.title} ${m.rating}`).join(", "));
+});
+
+it("liking a rare genre pulls that genre up, not the most common one", () => {
+  const music = tasteProfile(["Music"], ["Rockstar", "Aashiqui 2", "Rock Star"]);
+  const picks = engine.rank(music, { limit: 12 });
+  const share = picks.filter((m) => m.genres.includes("Music") || m.genres.includes("Musical")).length;
+  assert.ok(share >= 4, `expected Music/Musical to dominate, got ${share}/12`);
+});
+
+it("picks are ordered by match and stay in the honest band", () => {
+  const p = tasteProfile(["Thriller", "Crime"], ["Vikram", "Kaithi", "Vikram Vedha"]);
+  const picks = engine.rank(p, { limit: 40 });
+  for (let i = 1; i < picks.length; i++) {
+    assert.ok(picks[i - 1].match >= picks[i].match, "list is not ordered by match");
+  }
+  for (const m of picks) assert.ok(m.match >= 45 && m.match <= 97, "match out of band: " + m.match);
+});
+
+it("every card explains itself with something specific", () => {
+  const p = tasteProfile(["Comedy", "Drama"], ["3 Idiots", "Chhichhore", "Queen"]);
+  for (const m of engine.rank(p, { limit: 30 })) {
+    assert.ok(Array.isArray(m.reasons) && m.reasons.length >= 1, "no reason for " + m.title);
+    assert.ok(m.reasons.join(" ").length > 12, "reason too vague for " + m.title);
+  }
+});
+
+it("the list is diversified, not eight versions of one film", () => {
+  const p = tasteProfile(["Sci-Fi", "Thriller"], ["Inception", "Interstellar", "Arrival"]);
+  const picks = engine.rank(p, { limit: 24 });
+  const lead = {};
+  for (const m of picks) lead[m.genres[0]] = (lead[m.genres[0]] || 0) + 1;
+  const worst = Math.max(...Object.values(lead));
+  assert.ok(worst <= 14, `one genre took ${worst}/24 picks`);
+  assert.ok(Object.keys(lead).length >= 4, "list collapsed into " + Object.keys(lead).join(","));
+});
+
+it("questions probe different genres and skip what was already loved", () => {
+  const p = tasteProfile(["Action"], ["Vikram", "Kaithi"]);
+  const qs = engine.nextQuestions(p, 8);
+  assert.strictEqual(qs.length, 8);
+  const genres = new Set(qs.map((m) => m.genres[0]));
+  assert.ok(genres.size >= 4, "questions clustered into " + [...genres].join(","));
+  assert.ok(!qs.some((m) => m.id === byId.get(likedIds(["Vikram"])[0])?.id), "asked about a film already loved");
+});
+
 console.log("\nengine: unrated (web-added) films");
 const webFilm = {
   id: "w-q3438002",

@@ -357,16 +357,34 @@
     sugg.hidden = false;
     sugg.innerHTML = `<div class="sug-none sug-loading">
         <span class="spinner" aria-hidden="true"></span>
-        <span>Searching the web for “${esc(q)}”…</span>
+        <span>Searching Wikipedia for “${esc(q)}”…</span>
       </div>`;
+
+    // A lookup can legitimately fail (Wikipedia rate-limits by IP). That is never
+    // a dead end: the panel says why, and the button becomes "try again".
+    const failure = (status, detail) => {
+      const busy = status === "error";
+      sugg.innerHTML = `<div class="sug-none">
+          <span>${busy
+            ? `Wikipedia is busy right now, so “${esc(q)}” didn't come back.`
+            : `We couldn't find a film called “${esc(q)}” online.`}</span>
+          <span class="sug-hint">${busy
+            ? "It usually works on the next try — wait a few seconds."
+            : "Check the spelling, or add it anyway — it just won't get tags for personalising."}</span>
+          <button class="btn btn-primary btn-sm sug-web" type="button" data-web="${esc(q)}">
+            <svg class="ic"><use href="#i-globe"/></svg> Try again
+          </button>
+          <button class="btn btn-ghost btn-sm" type="button" data-manual="${esc(q)}">Add “${esc(q)}” anyway</button>
+        </div>`;
+      sugg.hidden = false;
+      if (busy && detail) console.info("[lookup]", detail);
+    };
+
     try {
-      const { candidates } = await api(`/lookup?q=${encodeURIComponent(q)}`);
-      if (!candidates || !candidates.length) {
-        sugg.innerHTML = `<div class="sug-none">
-            <span>Couldn't find “${esc(q)}” online — or the web is busy right now.</span>
-            <span class="sug-hint">You can still add it without a lookup; it just won't have tags for personalising.</span>
-            <button class="btn btn-ghost btn-sm" type="button" data-manual="${esc(q)}">Add “${esc(q)}” anyway</button>
-          </div>`;
+      const res = await api(`/lookup?q=${encodeURIComponent(q)}`);
+      const candidates = res.candidates || [];
+      if (!candidates.length) {
+        failure(res.status === "error" ? "error" : "empty", res.error);
         return;
       }
       sugItems = candidates;
@@ -379,7 +397,7 @@
               ${miniPoster(m, "sug-thumb")}
               <span class="sug-body">
                 <span class="sug-title">${esc(m.title)} <em>${m.year || ""}</em></span>
-                <span class="sug-meta">${esc((m.genres || []).join(" / "))} · ${esc(m.industryName)}${m.runtime ? ` · ${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : ""}</span>
+                <span class="sug-meta">${esc((m.genres || []).join(" / "))} · ${esc(m.industryName)}${m.runtime ? ` · ${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : ""}${m.director ? ` · ${esc(m.director)}` : ""}</span>
                 <span class="sug-blurb">${esc(brief(m.synopsis, 110))}</span>
               </span>
             </button>`
@@ -387,8 +405,7 @@
           .join("");
       sugg.hidden = false;
     } catch (err) {
-      toast("Web lookup failed — you can still add the title manually", "warn");
-      hideSuggestions();
+      failure("error", err && err.message);
     } finally {
       webBusy = false;
     }

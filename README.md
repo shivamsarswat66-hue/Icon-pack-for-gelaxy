@@ -44,10 +44,15 @@ isn't in it no longer fails and no longer guesses:
    `incepton`, `3 idots` — score ≥ 0.90, while junk (`animal` → *Arrival*, `rockstar` →
    *Rocky*) scores ≤ 0.55. The floor is **0.68**, so junk is never offered.
 2. **No match is a real answer.** You get *"“rockstar” isn't in our library — search the web for it"*.
-3. **Keyless lookup.** The search runs against **Wikipedia + Wikidata** (both allow CORS, so it
-   works from the static build too — no API key, no server, no cost), and is normalised into the
-   same schema as the curated catalogue: title, year, industry, runtime, director, `genres[]`
-   mapped onto our 19 genres, `keywords[]` mapped onto our existing vocabulary, and a synopsis.
+3. **Keyless lookup, three sources deep.** The search runs against **Wikipedia**, then the
+   **Wikidata action API**, then the **Wikidata query service** — three separate rate-limit
+   buckets, so a throttle on one doesn't end the lookup. Both allow CORS, so this works from the
+   static build too (no API key, no server, no cost). Results are normalised into the same schema
+   as the curated catalogue: title, year, industry, runtime, director, `genres[]` mapped onto our
+   19 genres, `keywords[]` mapped onto our existing vocabulary, and a synopsis. Only items whose
+   Wikidata `instance of` is a film class are accepted, so award shows, production houses and
+   soundtrack albums can't masquerade as films. Industry comes from language first (`Hindi` →
+   Bollywood, `Malayalam` → Indian Regional) and country second.
 4. **You confirm, always.** Candidates come back as *"Is this the one?"* with year, genres and a
    one-line plot; nothing is added silently.
 5. **It becomes a first-class film.** Confirmed films are registered into the live catalogue, so
@@ -81,10 +86,12 @@ Everything runs locally in `src/engine.js` — no API keys, no network calls, no
 | --- | --- |
 | **Fuzzy entry** | Levenshtein ratio + consonant-skeleton matching + contiguous token windows, so partial titles and misspellings resolve. Numbered titles normalise (`part two` = `2`). |
 | **Taste profile** | `{genres, keywords, industries}` weight maps. Declared genres, loved films, answers and feedback all add or subtract weight (clamped, with decay on removal). |
-| **Scoring** | `0.32 · genre affinity + 0.22 · closeness to loved films + 0.18 · theme match + 0.14 · quality + 0.07 · industry + 0.07 · novelty`, with penalties for rejected themes. |
-| **Explanations** | Every score produces human reasons ("Strong match for your Drama + Thriller taste", "Shares its DNA with Parasite") shown on cards and in the detail sheet. |
-| **Diversification** | MMR-style genre cap while filling the list, so 60 picks aren't 60 copies of one film. |
-| **Calibration** | Raw scores are stretched into a readable 56–98 % match band per shortlist. |
+| **Probing** | Questions target films near the decision boundary (a coin-flip teaches the most), tempered by whether they're recognisable, and rotated across genres so eight questions probe eight different parts of the taste space. |
+| **Rarity weighting** | Genres and themes are weighted by how rare they are in the catalogue (`idf`). "Drama" is on ~60 % of films and "Music" on ~5 %, so without this a single liked drama outweighed a loved musical and every list drifted towards high-IMDb dramas. |
+| **Scoring** | Eight normalised signals: `0.26 genre fit + 0.24 similarity to loved films + 0.12 theme fit + 0.14 quality + 0.05 popularity + 0.08 industry + 0.06 era + 0.06 director`, minus penalties for rejected genres, themes and directors. |
+| **Explanations** | Every card explains itself with the most specific thing available: "Same director as a film you loved — Imtiaz Ali", "Because you loved Tamasha", "Your strongest genre: Music". Phrasing varies per film so a list doesn't read like a mail merge. |
+| **Floor + diversity** | Films below an absolute score floor are never shown (no padding), and an MMR pass plus a soft lead-genre cap keeps 60 picks from becoming 60 copies of one film. |
+| **Honest match %** | `28 + 72 · score`, clamped to 45–97 — an absolute number, not a per-list stretch, so 90+ means a bullseye and the top card is always the best match. |
 | **Learning** | Watched / watch later boost the film's genres; "not for me" pushes them down and excludes the film permanently. "Refresh picks" walks an offset through the ranked pool for variety. |
 
 **Swapping in an LLM later:** the engine is intentionally isolated. `engine.rank()`, `engine.nextQuestions()`
