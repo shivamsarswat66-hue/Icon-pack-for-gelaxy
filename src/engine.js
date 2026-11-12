@@ -98,8 +98,14 @@ function tokenScore(query, title) {
   const lr = levRatio(qa, ta);
   score = Math.max(score, lr * (0.94 + 0.06 * coverage));
 
-  const sk = levRatio(skeleton(qa), skeleton(ta));
-  if (sk > 0.86) score = Math.max(score, sk * 0.9);
+  // Skeleton matching only works when there is a skeleton to speak of: "aattam"
+  // and "time" both collapse to "tm", which used to make them a 95% match.
+  const skQ = skeleton(qa);
+  const skT = skeleton(ta);
+  if (skQ.length >= 4 && skT.length >= 4) {
+    const sk = levRatio(skQ, skT);
+    if (sk > 0.86) score = Math.max(score, sk * 0.9);
+  }
 
   // every meaningful word of the title present (in any order)
   if (coverage === 1 && precision >= 0.8) score = Math.max(score, 0.93);
@@ -112,8 +118,11 @@ function tokenScore(query, title) {
         if (win.length < 4) continue;
         const wr = levRatio(qa, win);
         if (wr > 0.74) score = Math.max(score, Math.min(wr * STREAM, 0.995));
-        const wsr = levRatio(skeleton(qa), skeleton(win));
-        if (wsr > 0.9 && qa.length >= 6) score = Math.max(score, Math.min(wsr * STREAM, 0.99));
+        const skW = skeleton(win);
+        if (skQ.length >= 4 && skW.length >= 4 && qa.length >= 6) {
+          const wsr = levRatio(skQ, skW);
+          if (wsr > 0.9) score = Math.max(score, Math.min(wsr * STREAM, 0.99));
+        }
       }
     }
   }
